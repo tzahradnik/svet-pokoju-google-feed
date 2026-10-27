@@ -1,0 +1,4 @@
+.DS_Store
+.claude/
+.mcp.json
+__pycache__/
