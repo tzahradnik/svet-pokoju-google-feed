@@ -49,7 +49,17 @@ WEB_CATEGORIES = {
     "detske-kresilka": dict(label="P3_Kresilka", gpc="6499", ptype="Dětský pokoj > Dětská křesílka"),
     "detske-pohovky": dict(label="P3_Pohovky", gpc="460", ptype="Dětský pokoj > Dětské pohovky"),
     "plysove-hracky-2": dict(label="P4_Plys", gpc="1259", ptype="Hračky > Plyšové hračky"),
+    "zimni-obleceni": dict(label="P5_Zimni_obleceni", gpc="182", ptype="Oblečení > Zimní oblečení pro děti", apparel=True),
 }
+
+# Google kategorie dětského oblečení podle slov v názvu (první shoda vyhrává)
+APPAREL_GPC = [
+    (r"šaty", "5424"), (r"polodupačk|dupačk", "5411"), (r"komplet|souprav", "5622"),
+    (r"kombinéz|overal|bund|kabátek", "5425"),
+]
+COLOR_WORDS = ["béžovo-hnědá", "světle modrá", "světle modrý", "světle růžová", "světle žlutá", "smetanová", "smetanový", "krémová", "krémové",
+               "růžová", "růžový", "růžové", "modrá", "modrý", "modré", "bílá", "bílý", "bílé", "šedá", "šedý", "šedé", "béžová", "béžový",
+               "béžové", "červená", "červený", "žlutá", "zelená", "hnědá"]
 
 # typ nábytku: (název, rod pro barvu, gpc, kategorie v product_type)
 FURNITURE = {
@@ -293,10 +303,18 @@ def scrape_detail(url):
         og = re.search(r'<meta property="og:image" content="([^"]+)"', h)
         imgs = [html.unescape(og.group(1))] if og else []
     imgs = [html.unescape(i) for i in dict.fromkeys(imgs)]
+    # velikostní varianty (oblečení): jen ty, které jsou skladem
+    sizes = []
+    sel = re.search(r'<select[^>]*data-parameter-name="Velikost"[^>]*>(.*?)</select>', h, re.S)
+    avail = re.search(r"availableVariantsResource\s*=\s*\[([^\]]*)\]", h)
+    avail = set(re.findall(r"\d+-(\d+)", avail.group(1))) if avail else set()
+    for vid, label in re.findall(r'<option value="(\d+)"[^>]*>([^<]+)</option>', sel.group(1)) if sel else []:
+        if vid in avail:
+            sizes.append(label.strip())
     return dict(
         description=clean_text(desc.group(1) if desc else ""),
         brand=clean_text(brand.group(1)) if brand else "Svět pokojů",
-        images=imgs,
+        images=imgs, sizes=sizes, has_sizes=bool(sel),
     )
 
 
@@ -332,6 +350,13 @@ def build_web_supplement(feed_other):
                     availability="in stock", brand=d["brand"], shipping=[], weight="", top_label="",
                 )
                 from_web += 1
+                if meta.get("apparel") and d["has_sizes"] and not d["sizes"]:
+                    continue   # všechny velikosti vyprodané
+                if meta.get("apparel") and d["sizes"]:   # u oblečení jedna položka na skladem dostupnou velikost
+                    for sz in d["sizes"]:
+                        records.append(dict(rec, id=f"{c['pid']}-{sz}", cat=slug, size=sz,
+                                            title=f"{c['name']} vel. {sz}"))
+                    continue
             rec["cat"] = slug
             records.append(rec)
     log(f"Doplněk: {from_feed} z feedu, {from_web} z webu")
@@ -382,11 +407,26 @@ def web_output(rec):
     title = re.sub(r"\s+", " ", title)
     title = sentence_case(title)
     cross = "doplnek_k_posteli" if rec["cat"] in ("detske-kresilka", "detske-pohovky") else "hlavni_produkt"
-    season = "vanoce_2026" if rec["cat"] == "plysove-hracky-2" else ""
+    season = "vanoce_2026" if rec["cat"] == "plysove-hracky-2" else "zima_2026" if meta.get("apparel") else ""
+    extra = {}
+    gpc, role, size, color = meta["gpc"], "bez_motivu", "", ""
+    if meta.get("apparel"):
+        low = title.lower()
+        gpc = next((g for rx, g in APPAREL_GPC if re.search(rx, low)), meta["gpc"])
+        role, cross = "sezonni_obleceni", "sezonni_doplnek"
+        sm = re.search(r"vel\.?\s*([\d][\d\s\-–]*(?:\s*m)?)", title, re.I)
+        size = rec.get("size") or (re.sub(r"\s+", "", sm.group(1)).replace("m", " m") if sm else "")
+        mc = re.search(r"(?:světle|tmavě)\s+\w+", low)
+        color = mc.group(0) if mc else next((c for c in COLOR_WORDS if c in low), "vícebarevná")
+        n = re.search(r"\d+", size)
+        n = int(n.group(0)) if n else 0
+        months = size.endswith("m")
+        extra["age_group"] = ("infant" if n <= 12 else "toddler") if months else ("newborn" if n and n <= 62 else "infant" if n <= 80 else "toddler")
+        extra["gender"] = "female" if re.search(r"růžov|dívčí|šaty", low) else "unisex"
     return dict(
-        rec, out_title=title[:150], out_desc=rec["description"] or title, gpc=meta["gpc"], ptype=meta["ptype"],
-        color="", size="", material="",
-        labels=[meta["label"], "bez_motivu", price_band(rec["sale_price"] or rec["price"]), cross, season],
+        rec, out_title=title[:150], out_desc=rec["description"] or title, gpc=gpc, ptype=meta["ptype"],
+        color=color, size=size, material="",
+        labels=[meta["label"], role, price_band(rec["sale_price"] or rec["price"]), cross, season], **extra,
     )
 
 
@@ -467,7 +507,9 @@ def render(items):
         L.append("<g:condition>new</g:condition>")
         L.append("<g:identifier_exists>no</g:identifier_exists>")
         L.append("<g:adult>no</g:adult>")
-        L.append("<g:age_group>kids</g:age_group>")
+        L.append(f"<g:age_group>{o.get('age_group', 'kids')}</g:age_group>")
+        if o.get("gender"):
+            L.append(f"<g:gender>{o['gender']}</g:gender>")
         if o["color"]:
             L.append(f"<g:color>{e(o['color'])}</g:color>")
         if o["material"]:

@@ -1,15 +1,16 @@
 # Feed pro Google Ads – svet-pokoju.cz
 
 `build_feed.py` stáhne Shoptet feed (`/google/export/products.xml`), vybere prioritní produkty
-a vygeneruje malý feed `dist/google-ads-feed.xml` (cca 700 položek, strop 1 500).
+a vygeneruje malý feed `dist/google-ads-feed.xml` (cca 770 položek, strop 1 500).
 
 - **P1_Kevin_postele / P1_Kevin_nabytek** – kolekce Kevin, jedna varianta na model (bílá, 140x70, bez úložného prostoru)
 - **P2_Molitan** – molitanové stavebnice a pěnové hřiště
 - **P3_Kresilka / P3_Pohovky** – dětská křesílka a pohovky (cross-sell k postelím)
 - **P4_Plys** – plyšové hračky (`custom_label_4 = vanoce_2026`)
+- **P5_Zimni_obleceni** – zimní oblečení (`custom_label_4 = zima_2026`), jedna položka na skladem dostupnou velikost
 
 Kojenecké potřeby, levné hračky a matrace se do feedu nedostanou (whitelist).
-Kategorie molitan/křesílka/pohovky/plyš doplňuje skript z webu, protože je Shoptet do Google feedu neexportuje.
+Kategorie molitan/křesílka/pohovky/plyš/zimní oblečení doplňuje skript z webu, protože je Shoptet do Google feedu neexportuje.
 
 Ladění: konstanty nahoře v `build_feed.py` (`MOTIFS_PER_MODEL`, `PRIORITY_MOTIFS`, `MAX_ITEMS` …).
 Test lokálně: `python3 build_feed.py --out dist/google-ads-feed.xml`
