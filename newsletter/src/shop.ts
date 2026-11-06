@@ -15,6 +15,15 @@ export function decodeEntities(s: string): string {
   });
 }
 
+function absolute(url: string, base: string): string {
+  if (!url) return url;
+  try {
+    return new URL(url, base).toString();
+  } catch {
+    return url;
+  }
+}
+
 function clean(s: string): string {
   return decodeEntities(s.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
 }
@@ -64,12 +73,14 @@ export function parseProducts(html: string, shopUrl: string): Product[] {
       id,
       name: clean(name),
       url: href.startsWith("http") ? href : shopUrl + href,
-      image: decodeEntities(image.trim()),
+      // Shoptet serves relative image paths to some clients (e.g. Cloudflare) – e-mails need absolute URLs
+      image: absolute(decodeEntities(image.trim()), shopUrl),
       price: Math.round(Number(price)),
       priceOriginal: priceOriginal && priceOriginal > Number(price) ? priceOriginal : null,
       discountPct: save ? Number(save) : null,
       availability,
-      inStock: /skladem/i.test(availability) && !/není skladem|vyprodán/i.test(availability),
+      // "Skladem do 7–21 dní" means made to order, not available right now
+      inStock: /^skladem\b/i.test(availability) && !/skladem do|není skladem|vyprodán/i.test(availability),
       flags,
     });
   }
