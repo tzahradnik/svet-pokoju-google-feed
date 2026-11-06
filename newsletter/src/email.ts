@@ -1,0 +1,130 @@
+import type { EmailState, Env, Product } from "./types";
+
+const C = {
+  blue: "#14b1ef",
+  teal: "#12a89d",
+  orange: "#fdaf40",
+  red: "#e52648",
+  text: "#2b2b2b",
+  muted: "#6b6b6b",
+  bg: "#f3f6f8",
+  card: "#ffffff",
+  line: "#e4e9ed",
+};
+const FONT = "Arial, Helvetica, sans-serif";
+const LOGO = "https://cdn.myshoptet.com/usr/www.svet-pokoju.cz/user/logos/logo-2.png";
+
+export function esc(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function paragraphs(text: string, style: string): string {
+  return text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p style="margin:0 0 14px;${style}">${esc(p).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+function slug(s: string): string {
+  return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "newsletter";
+}
+
+function track(url: string, campaign: string, content: string): string {
+  try {
+    const u = new URL(url);
+    if (!u.hostname.endsWith("svet-pokoju.cz")) return url;
+    u.searchParams.set("utm_source", "ecomail");
+    u.searchParams.set("utm_medium", "email");
+    u.searchParams.set("utm_campaign", slug(campaign));
+    u.searchParams.set("utm_content", content);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+const fmt = (n: number) => `${n.toLocaleString("cs-CZ").replace(/ /g, " ")} Kč`;
+
+function button(text: string, href: string, color = C.orange): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td style="border-radius:6px;background:${color}">
+<a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-family:${FONT};font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px">${esc(text)}</a>
+</td></tr></table>`;
+}
+
+function productCard(p: Product, blurb: string, badge: string, campaign: string): string {
+  const href = track(p.url, campaign, `produkt-${p.id}`);
+  const price = p.priceOriginal
+    ? `<span style="color:${C.red};font-weight:bold;font-size:18px">${fmt(p.price)}</span> <span style="color:${C.muted};text-decoration:line-through;font-size:13px">${fmt(p.priceOriginal)}</span>`
+    : `<span style="color:${C.text};font-weight:bold;font-size:18px">${fmt(p.price)}</span>`;
+  const badgeHtml = badge
+    ? `<span style="display:inline-block;background:${p.discountPct ? C.red : C.teal};color:#fff;font-size:12px;font-weight:bold;padding:3px 8px;border-radius:4px;margin-bottom:8px">${esc(badge)}</span><br>`
+    : "";
+  return `<div class="col" style="display:inline-block;vertical-align:top;width:100%;max-width:262px;margin:0 5px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border:1px solid ${C.line};border-radius:8px">
+<tr><td style="padding:12px 12px 0" align="center"><a href="${esc(href)}"><img src="${esc(p.image)}" width="238" alt="${esc(p.name)}" style="display:block;width:100%;max-width:238px;height:auto;border:0;border-radius:6px"></a></td></tr>
+<tr><td style="padding:12px 14px 16px;font-family:${FONT};text-align:left">
+${badgeHtml}<a href="${esc(href)}" style="color:${C.text};text-decoration:none;font-size:15px;font-weight:bold;line-height:1.35">${esc(p.name)}</a>
+<p style="margin:8px 0 10px;color:${C.muted};font-size:14px;line-height:1.5">${esc(blurb)}</p>
+<p style="margin:0 0 12px">${price}</p>
+<a href="${esc(href)}" style="display:inline-block;padding:9px 16px;background:${C.blue};color:#fff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:5px">Zobrazit produkt</a>
+</td></tr></table></div>`;
+}
+
+/** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|* and *|UNSUB|* included). */
+export function renderEmail(env: Env, s: EmailState): string {
+  const { copy, campaign } = s;
+  const byId = new Map(s.products.map((p) => [p.id, p]));
+  const cards = copy.products
+    .map((pc) => {
+      const p = byId.get(pc.id);
+      return p ? productCard(p, pc.blurb, pc.badge, campaign) : "";
+    })
+    .join("");
+  const heroUrl = track(copy.hero_cta_url || env.SHOP_URL, campaign, "hlavni-tlacitko");
+  const footerUrl = track(copy.hero_cta_url || env.SHOP_URL, campaign, "zaver");
+  const hero = s.heroImage
+    ? `<tr><td style="padding:0"><a href="${esc(heroUrl)}"><img src="${esc(s.heroImage)}" width="600" alt="" style="display:block;width:100%;height:auto;border:0"></a></td></tr>`
+    : "";
+  const sections = copy.sections
+    .filter((x) => x.title || x.text)
+    .map(
+      (x) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef9fe;border-left:4px solid ${C.blue};border-radius:6px"><tr><td style="padding:16px 18px">
+<h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(x.title)}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}
+</td></tr></table></td></tr>`,
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(s.subject || copy.headline)}</title>
+<style>@media (max-width:620px){.col{max-width:100%!important;margin:0 0 16px!important}.px{padding-left:18px!important;padding-right:18px!important}}</style></head>
+<body style="margin:0;padding:0;background:${C.bg}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${C.bg}">${esc(copy.preheader)}${"&#8203;&nbsp;".repeat(40)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg}"><tr><td align="center" style="padding:16px 8px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
+<tr><td style="padding:0 8px 10px;font-family:${FONT};font-size:12px;color:${C.muted};text-align:right"><a href="*|WEBVERSION|*" style="color:${C.muted}">Zobrazit e-mail v prohlížeči</a></td></tr>
+<tr><td style="background:${C.card};border-radius:10px 10px 0 0;padding:20px 32px;text-align:center;border-bottom:3px solid ${C.blue}">
+<a href="${esc(track(env.SHOP_URL, campaign, "logo"))}"><img src="${LOGO}" width="200" alt="${esc(env.SHOP_NAME)}" style="display:inline-block;width:200px;height:auto;border:0"></a></td></tr>
+<tr><td style="background:${C.card}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${hero}
+<tr><td class="px" style="padding:28px 32px 6px;font-family:${FONT}">
+<h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:${C.text}">${esc(copy.headline)}</h1>
+${paragraphs(copy.intro, `font-size:16px;line-height:1.6;color:${C.text}`)}
+</td></tr>
+<tr><td style="padding:6px 32px 26px">${button(copy.hero_cta_text || "Prohlédnout nabídku", heroUrl)}</td></tr>
+${sections}
+<tr><td style="padding:18px 20px 4px;text-align:center;font-size:0">${cards}</td></tr>
+<tr><td class="px" style="padding:10px 32px 4px;font-family:${FONT}">${paragraphs(copy.closing, `font-size:16px;line-height:1.6;color:${C.text}`)}</td></tr>
+<tr><td style="padding:6px 32px 32px">${button(copy.cta_text || "Na e-shop", footerUrl, C.teal)}</td></tr>
+</table></td></tr>
+<tr><td style="background:#e9eff3;border-radius:0 0 10px 10px;padding:22px 32px;font-family:${FONT};font-size:13px;line-height:1.6;color:${C.muted};text-align:center">
+<strong style="color:${C.text}">${esc(env.SHOP_NAME)}</strong> – nábytek a vše pro dětský pokojíček<br>
+<a href="mailto:info@svet-pokoju.cz" style="color:${C.muted}">info@svet-pokoju.cz</a> · +420 770 330 792 · <a href="${esc(track(env.SHOP_URL, campaign, "paticka"))}" style="color:${C.muted}">www.svet-pokoju.cz</a><br><br>
+Tento e-mail jste obdrželi, protože jste se přihlásili k odběru novinek.<br>
+<a href="*|UNSUB|*" style="color:${C.muted}">Odhlásit se z odběru</a>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
+}

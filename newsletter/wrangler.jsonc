@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "svet-pokoju-newsletter",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  // Non-secret defaults. Secrets (APP_PASSWORD, SESSION_SECRET, ANTHROPIC_API_KEY,
+  // ECOMAIL_API_KEY) are set with `npx wrangler secret put <NAME>` or in .dev.vars locally.
+  "vars": {
+    "SHOP_URL": "https://www.svet-pokoju.cz",
+    "SHOP_NAME": "Světpokojů.cz",
+    "FROM_NAME": "Světpokojů.cz",
+    "FROM_EMAIL": "",
+    "REPLY_TO": "info@svet-pokoju.cz",
+    "DEFAULT_LIST_ID": ""
+  }
+}

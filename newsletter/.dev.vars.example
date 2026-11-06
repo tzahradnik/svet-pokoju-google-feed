@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local development (never commit .dev.vars)
+APP_PASSWORD=change-me
+SESSION_SECRET=long-random-string
+ANTHROPIC_API_KEY=
+ECOMAIL_API_KEY=

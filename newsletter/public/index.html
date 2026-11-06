@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Newslettery – Světpokojů.cz</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Login -->
+  <section id="login" class="login hidden">
+    <form id="login-form" class="login-card">
+      <img src="https://cdn.myshoptet.com/usr/www.svet-pokoju.cz/user/logos/logo-2.png" alt="Světpokojů.cz" width="180">
+      <h1>Tvorba newsletterů</h1>
+      <label>Heslo<input type="password" id="password" autocomplete="current-password" required autofocus></label>
+      <button class="btn primary" type="submit">Přihlásit</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="brand"><img src="https://cdn.myshoptet.com/usr/www.svet-pokoju.cz/user/logos/logo-2.png" alt="" width="120"><span>Newslettery</span></div>
+      <div class="status" id="status"></div>
+      <button class="btn ghost" id="logout">Odhlásit</button>
+    </header>
+
+    <main class="layout">
+      <!-- Left: brief + editor -->
+      <div class="panel" id="left">
+        <section class="card" id="brief">
+          <h2><span class="step">1</span> Jaký e-mail potřebujete?</h2>
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-kind="topic" role="tab">Téma z plánu</button>
+            <button class="tab" data-kind="special" role="tab">Akce a sezóna</button>
+            <button class="tab" data-kind="custom" role="tab">Vlastní</button>
+          </div>
+
+          <div id="recommended" class="recommended"></div>
+
+          <div class="kind-pane" data-pane="topic">
+            <label>Téma
+              <select id="topic"></select>
+            </label>
+            <div id="topic-info" class="topic-info"></div>
+          </div>
+          <div class="kind-pane hidden" data-pane="special">
+            <label>Typ kampaně
+              <select id="special"></select>
+            </label>
+          </div>
+          <div class="kind-pane hidden" data-pane="custom">
+            <label>Název / téma e-mailu
+              <input id="custom-name" placeholder="např. Novinky v nabídce postýlek">
+            </label>
+          </div>
+
+          <div class="field">
+            <span class="label">Odkud brát produkty</span>
+            <div id="sources" class="chips"></div>
+            <div class="row">
+              <input id="source-input" placeholder="adresa kategorie (např. /detske-postele/) nebo hledaný výraz">
+              <button class="btn" id="add-source" type="button">Přidat</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="label">Konkrétní produkty, které musí být v e-mailu <small>(nepovinné)</small></span>
+            <div class="row">
+              <input id="search-input" placeholder="hledat produkt na svet-pokoju.cz">
+              <button class="btn" id="search-btn" type="button">Hledat</button>
+            </div>
+            <div id="search-results" class="mini-grid"></div>
+            <div id="pinned" class="chips"></div>
+          </div>
+
+          <div class="grid2">
+            <label>Počet produktů
+              <input type="number" id="count" min="1" max="8" value="4">
+            </label>
+            <label>Oslovení
+              <select id="tone"><option value="vykani">Vykání</option><option value="tykani">Tykání</option></select>
+            </label>
+          </div>
+          <label>Doplňující zadání <small>(sleva, kód, termín, tón…)</small>
+            <textarea id="brief-text" rows="3" placeholder="např. Sleva 10 % s kódem POSTEL10 do neděle, zmínit dopravu zdarma nad 3 000 Kč"></textarea>
+          </label>
+          <button class="btn primary big" id="generate">Vygenerovat návrh e-mailu</button>
+          <p class="hint">Generování trvá obvykle 20–60 sekund.</p>
+        </section>
+
+        <section class="card hidden" id="editor">
+          <h2><span class="step">2</span> Úpravy textu a produktů</h2>
+          <label>Předmět
+            <input id="subject">
+          </label>
+          <div id="subject-variants" class="chips small"></div>
+          <label>Preheader <small>(text za předmětem ve schránce)</small><input id="preheader"></label>
+          <label>Úvodní obrázek <small>(nepovinné – URL nebo vyberte z produktů níže)</small><input id="hero-image" placeholder="https://…"></label>
+          <label>Nadpis<input id="headline"></label>
+          <label>Úvod<textarea id="intro" rows="5"></textarea></label>
+          <div class="grid2">
+            <label>Text hlavního tlačítka<input id="hero-cta-text"></label>
+            <label>Odkaz hlavního tlačítka<input id="hero-cta-url"></label>
+          </div>
+
+          <div class="field">
+            <span class="label">Obsahové bloky</span>
+            <div id="sections-edit"></div>
+            <button class="btn small" id="add-section" type="button">+ Přidat blok</button>
+          </div>
+
+          <div class="field">
+            <span class="label">Produkty v e-mailu</span>
+            <div id="products-edit"></div>
+            <details class="more">
+              <summary>+ Přidat další produkt z nabídky</summary>
+              <div id="candidates" class="mini-grid"></div>
+            </details>
+          </div>
+
+          <label>Závěr<textarea id="closing" rows="3"></textarea></label>
+          <label>Text závěrečného tlačítka<input id="cta-text"></label>
+
+          <div class="regen">
+            <label>Co změnit? <small>(AI přepíše e-mail podle vaší poznámky)</small>
+              <textarea id="feedback" rows="2" placeholder="např. kratší úvod, víc zdůraznit bezpečnost, jiný předmět"></textarea>
+            </label>
+            <button class="btn" id="regenerate">Přegenerovat s poznámkou</button>
+          </div>
+        </section>
+
+        <section class="card hidden" id="approve">
+          <h2><span class="step">3</span> Schválení a vložení do Ecomailu</h2>
+          <label>Název kampaně v Ecomailu<input id="campaign-title"></label>
+          <div class="grid2">
+            <label>Jméno odesílatele<input id="from-name"></label>
+            <label>E-mail odesílatele<input id="from-email" type="email" placeholder="musí být na ověřené doméně"></label>
+          </div>
+          <label>Odpovědi na adresu<input id="reply-to" type="email"></label>
+          <div class="field">
+            <span class="label">Seznamy kontaktů</span>
+            <div id="lists" class="lists"><em>Načítám…</em></div>
+          </div>
+          <div class="actions">
+            <button class="btn primary big" id="push">Schválit a vložit jako draft do Ecomailu</button>
+            <button class="btn" id="download">Stáhnout HTML</button>
+            <button class="btn" id="copy-html">Kopírovat HTML</button>
+          </div>
+          <p class="hint">Nástroj e-mail nikdy neodešle – v Ecomailu vznikne koncept kampaně, který zkontrolujete a odešlete sami.</p>
+          <p id="push-result" role="status"></p>
+        </section>
+      </div>
+
+      <!-- Right: preview -->
+      <div class="panel preview-panel">
+        <div class="preview-head">
+          <strong>Náhled e-mailu</strong>
+          <div class="seg">
+            <button class="active" data-w="100%">Počítač</button>
+            <button data-w="375px">Mobil</button>
+          </div>
+        </div>
+        <div class="preview-wrap">
+          <div id="preview-empty" class="preview-empty">Náhled se zobrazí po vygenerování návrhu.</div>
+          <iframe id="preview" title="Náhled e-mailu" class="hidden"></iframe>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="overlay" class="overlay hidden"><div class="spinner"></div><p id="overlay-text">Pracuji…</p></div>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
