@@ -3,6 +3,10 @@
     "date": "2026-11-07",
     "changes": [
       {
+        "type": "improve",
+        "text": "Návod má dvě verze: stručný návod v šesti krocích a podrobný návod se všemi funkcemi. Přepínač je nahoře, návod si pamatuje poslední volbu. V patičce návodu je nově informace o tom, jak a pro koho nástroj vznikl a k čemu slouží."
+      },
+      {
         "type": "new",
         "text": "Návod pro tým na adrese nl.svet-pokoju.workers.dev/navod: přihlášení, všechny kroky, úvodní háčky, odeslání v Ecomailu a řešení problémů. Odkaz je v patičce aplikace a na přihlašovací stránce, poslední změny se do návodu načítají samy."
       },

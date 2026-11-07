@@ -37,10 +37,30 @@
   .cl-day h3 { margin: 0 0 4px; font-size: 15px; color: var(--muted); }
   .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 0 7px; border-radius: 99px; margin-right: 4px; }
   .tag.new { background: #e3f6fd; color: #0b75a8; } .tag.improve { background: #e9f8f1; color: #0b7d74; } .tag.fix { background: #fde8ea; color: #a10d25; }
-  footer { color: var(--muted); font-size: 14px; text-align: center; margin-top: 24px; }
+  footer { color: var(--muted); font-size: 14px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 18px; }
+  footer .about { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 14px; }
+  footer .about h2 { font-size: 16px; color: var(--text); margin: 0 0 8px; }
+  footer .about p { margin: 6px 0; }
+  footer dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 0; }
+  footer dt { font-weight: 700; color: var(--text); }
+  footer dd { margin: 0; }
+  footer .bottom { text-align: center; }
+  /* short / full switch */
+  .switch { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 99px; padding: 4px; margin: 0 0 18px; gap: 4px; flex-wrap: wrap; }
+  .switch button { border: 0; background: none; font: inherit; font-weight: 600; color: var(--muted); padding: 7px 16px; border-radius: 99px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--blue); color: #fff; }
+  .switch button:focus-visible { outline: 3px solid #9fdcf6; }
+  .switch-hint { display: block; color: var(--muted); font-size: 14px; margin: -10px 0 18px; }
+  body[data-view="strucny"] [data-v="plny"], body[data-view="plny"] [data-v="strucny"] { display: none; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  .steps > li { counter-increment: s; position: relative; padding: 0 0 14px 44px; margin: 0; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 700; }
+  .steps > li:last-child { padding-bottom: 0; }
+  .steps strong.t { display: block; }
+  @media (max-width: 600px) { footer dl { grid-template-columns: 1fr; gap: 0; } footer dd { margin-bottom: 6px; } }
 </style>
 </head>
-<body>
+<body data-view="strucny">
 <div class="wrap">
   <header>
     <img src="https://cdn.myshoptet.com/usr/www.svet-pokoju.cz/user/logos/logo-2.png" alt="Světpokojů.cz" width="150">
@@ -50,7 +70,29 @@
   <h1>Jak tvořit newslettery</h1>
   <p class="lead">Nástroj připraví e-mail pro odběratele Světa pokojů: vybere produkty přímo z e-shopu, napíše text hlasem Terezy a hotový návrh vloží do Ecomailu jako koncept. Odesílá se vždy ručně v Ecomailu.</p>
 
-  <div class="card">
+  <div class="switch" role="group" aria-label="Verze návodu">
+    <button type="button" data-set="strucny" aria-pressed="true">Stručný návod</button>
+    <button type="button" data-set="plny" aria-pressed="false">Podrobný návod</button>
+  </div>
+  <span class="switch-hint" data-v="strucny">To nejdůležitější na jednu obrazovku. Všechny podrobnosti najdete v podrobném návodu.</span>
+  <span class="switch-hint" data-v="plny">Všechny funkce, nastavení a řešení problémů. Pro rychlý přehled přepněte na stručný návod.</span>
+
+  <section class="card" data-v="strucny" id="strucne">
+    <h2>Newsletter v šesti krocích</h2>
+    <ol class="steps">
+      <li><strong class="t">Přihlaste se</strong>Otevřete <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a> a zadejte heslo, které vám osobně dá správce nástroje.</li>
+      <li><strong class="t">Vyberte téma</strong>Nejjednodušší je záložka <span class="ui">Téma z plánu</span>. Sleva, kód nebo termín patří do pole <span class="ui">Doplňující zadání</span>, AI si je sama nevymyslí.</li>
+      <li><strong class="t">Nechte e-mail vygenerovat</strong>Klikněte na <span class="ui">Vygenerovat návrh e-mailu</span> a počkejte 20 až 60 sekund.</li>
+      <li><strong class="t">Přečtěte a upravte</strong>Vpravo je náhled, vlevo všechno upravíte. Zkontrolujte hlavně ceny, rozměry a tvrzení o produktech. Když se vám text nelíbí, napište poznámku a klikněte na <span class="ui">Přegenerovat s poznámkou</span>.</li>
+      <li><strong class="t">Vložte do Ecomailu</strong>V kroku 3 klikněte na <span class="ui">Zkontrolovat odkazy</span> a pak na <span class="ui">Schválit a vložit jako draft do Ecomailu</span>.</li>
+      <li><strong class="t">Odešlete v Ecomailu</strong>Najděte koncept v Kampaních, pošlete si testovací e-mail a jako příjemce vyberte jen kontakty se souhlasem (segment se štítkem <code>shpt_newsletters</code>).</li>
+    </ol>
+    <div class="ok">Nástroj e-mail <strong>nikdy sám neodešle</strong>, odesíláte vždy vy v Ecomailu.</div>
+    <div class="note">Otázky a recenze zákazníků v úvodním háčku musí být skutečné. Heslo nikomu neposílejte e-mailem ani do chatu.</div>
+    <p>Něco nejde nebo potřebujete víc? <button type="button" class="linkish" data-set="plny" style="border:0;background:none;padding:0;font:inherit;color:#09608a;text-decoration:underline;cursor:pointer">Otevřít podrobný návod</button></p>
+  </section>
+
+  <div class="card" data-v="plny">
     <h2>Obsah</h2>
     <ol class="toc">
       <li><a href="#prihlaseni">Přihlášení</a></li>
@@ -65,7 +107,7 @@
     </ol>
   </div>
 
-  <section class="card" id="prihlaseni">
+  <section class="card" data-v="plny" id="prihlaseni">
     <h2><span class="num">1</span> Přihlášení</h2>
     <p><a class="cta" href="https://nl.svet-pokoju.workers.dev/">Otevřít nástroj</a></p>
     <ul>
@@ -77,7 +119,7 @@
     <p>Vlevo nahoře vedle loga je stav <span class="ui">✓ Vše napojeno</span>. Po najetí myší ukáže, co je připojené (AI, Ecomail, katalog e-shopu, odesílatel). Pokud tam svítí <span class="ui">⚠ Něco není napojené</span>, ozvěte se správci.</p>
   </section>
 
-  <section class="card" id="krok1">
+  <section class="card" data-v="plny" id="krok1">
     <h2><span class="num">2</span> Krok 1: Jaký e-mail potřebujete?</h2>
     <p>Nahoře vyberte jednu ze čtyř záložek:</p>
     <table>
@@ -98,7 +140,7 @@
     <p>Klikněte na <span class="ui">Vygenerovat návrh e-mailu</span>. Okno s průběhem ukáže, co se právě děje, odkud se berou produkty, jaká pravidla AI dodržuje a kolik času zbývá. Trvá to obvykle 20 až 60 sekund.</p>
   </section>
 
-  <section class="card" id="hacek">
+  <section class="card" data-v="plny" id="hacek">
     <h2><span class="num">3</span> Úvodní háček a oslovení jménem</h2>
     <p>Háček je prvek na začátku e-mailu, který má čtenáře zaujmout, aby četl dál. Tlačítko <span class="ui">i</span> vedle výběru ukáže příklad a místo, kde bude v e-mailu.</p>
     <table>
@@ -115,7 +157,7 @@
     <p><strong>Oslovit čtenáře jménem</strong> (zapnuto): kdo má v Ecomailu jméno, dostane „Dobrý den, Ondřeji,“, ostatní „Dobrý den,“. V náhledu v nástroji je vždy ukázkové jméno „Ondřeji“, skutečná jména doplní Ecomail při rozesílce.</p>
   </section>
 
-  <section class="card" id="krok2">
+  <section class="card" data-v="plny" id="krok2">
     <h2><span class="num">4</span> Krok 2: Úpravy textu a produktů</h2>
     <p>Vpravo je náhled e-mailu (přepínač <span class="ui">Počítač</span> a <span class="ui">Mobil</span>). Každá úprava vlevo se v náhledu hned projeví.</p>
     <ul>
@@ -128,7 +170,7 @@
     <div class="note"><strong>Vždy si text přečtěte.</strong> AI má přísná pravidla, ale pořád se může splést, třeba přisoudit produktu vlastnost, kterou nemá. Zkontrolujte hlavně ceny, rozměry a tvrzení o produktech.</div>
   </section>
 
-  <section class="card" id="krok3">
+  <section class="card" data-v="plny" id="krok3">
     <h2><span class="num">5</span> Krok 3: Schválení a vložení do Ecomailu</h2>
     <ol>
       <li>Zkontrolujte <strong>název kampaně</strong> (vidíte ho jen vy v Ecomailu) a odesílatele. Odesílatel je předvyplněný (info@email.svet-pokoju.cz, odpovědi chodí na info@svet-pokoju.cz), neměňte ho.</li>
@@ -140,7 +182,7 @@
     <p>Bez Ecomailu můžete e-mail <span class="ui">Stáhnout HTML</span> nebo <span class="ui">Kopírovat HTML</span>.</p>
   </section>
 
-  <section class="card" id="odeslani">
+  <section class="card" data-v="plny" id="odeslani">
     <h2><span class="num">6</span> Odeslání v Ecomailu</h2>
     <ol>
       <li>V Ecomailu otevřete <strong>Kampaně</strong> a najděte koncept podle názvu.</li>
@@ -150,7 +192,7 @@
     <div class="note"><strong>Příjemci:</strong> seznam „Odběratelé newsletteru [e-shop]“ obsahuje asi 12 200 kontaktů ze Shoptetu. Souhlas s newsletterem má jen asi 4 200 z nich (štítek <code>shpt_newsletters</code>), zbytek jsou zákazníci z objednávek. Kampaně posílejte jen kontaktům se štítkem <code>shpt_newsletters</code> (segment v Ecomailu), jinak riskujete stížnosti na spam a horší doručování.</div>
   </section>
 
-  <section class="card" id="pravidla">
+  <section class="card" data-v="plny" id="pravidla">
     <h2><span class="num">7</span> Jak AI píše</h2>
     <ul>
       <li>Píše za <strong>Terezu</strong>, v první osobě, vřele a konkrétně, podle příběhu ze stránky <a href="https://www.svet-pokoju.cz/o-nas/">O nás</a>. Pod e-mailem je podpis „S láskou, Tereza ze Světa Pokojů“ s fotkou.</li>
@@ -162,7 +204,7 @@
     <p>Pravidla a tón hlasu jsou v jednom souboru. Chcete-li styl změnit, napište správci, co upravit.</p>
   </section>
 
-  <section class="card" id="problemy">
+  <section class="card" data-v="plny" id="problemy">
     <h2><span class="num">8</span> Když něco nejde</h2>
     <table>
       <tr><th>Problém</th><th>Co dělat</th></tr>
@@ -182,9 +224,41 @@
     <div id="cl"><p>Načítám…</p></div>
   </section>
 
-  <footer>Newslettery Světpokojů.cz · <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a></footer>
+  <footer>
+    <div class="about">
+      <h2>O nástroji</h2>
+      <p>Nástroj vznikl na základě domluvy mezi Jaroslavem Broskvou a Tomášem Zahradníkem: Svět pokojů chtěl posílat odběratelům pravidelné newslettery, které budou užitečné, napsané lidsky hlasem Terezy a postavené na skutečné nabídce e-shopu, a přitom jejich příprava nezabere celý den.</p>
+      <dl>
+        <dt>Objednatel</dt><dd>Jaroslav Broskva, Světpokojů.cz</dd>
+        <dt>Vytvořil</dt><dd>Tomáš Zahradník</dd>
+        <dt>K čemu slouží</dt><dd>K rychlé přípravě newsletterů pro odběratele Světa pokojů: vybere aktuální produkty z e-shopu, napíše text podle pravidel značky a hotový návrh vloží do Ecomailu jako koncept. O odeslání vždy rozhoduje člověk.</dd>
+      </dl>
+    </div>
+    <p class="bottom">Newslettery Světpokojů.cz · <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a></p>
+  </footer>
 </div>
 <script>
+  // Short / full guide: ?verze=plny|strucny, a link to a detailed section, or the last choice
+  (function () {
+    const KEY = "navod-verze";
+    const set = (v, remember) => {
+      document.body.dataset.view = v;
+      document.querySelectorAll(".switch button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === v)));
+      if (remember) try { localStorage.setItem(KEY, v); } catch (e) {}
+    };
+    const q = new URLSearchParams(location.search).get("verze");
+    const target = location.hash && document.querySelector(location.hash);
+    let saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    if (q === "plny" || q === "strucny") set(q);
+    else if (target && target.closest('[data-v="plny"]')) set("plny");
+    else if (saved === "plny" || saved === "strucny") set(saved);
+    document.querySelectorAll("[data-set]").forEach((b) => b.addEventListener("click", () => {
+      set(b.dataset.set, true);
+      if (b.closest("#strucne")) window.scrollTo({ top: 0, behavior: "smooth" });
+    }));
+  })();
+
   // Latest app changes, straight from the changelog the app itself shows
   const LABEL = { new: "Novinka", improve: "Vylepšení", fix: "Oprava" };
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
