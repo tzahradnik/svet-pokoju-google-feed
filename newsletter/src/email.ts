@@ -1,10 +1,13 @@
 import type { EmailState, Env, Product } from "./types";
 
 const C = {
+  // Brand colours, darkened where white text sits on them so every pair passes WCAG AA (≥ 4.5:1)
   blue: "#14b1ef",
-  teal: "#12a89d",
+  blueDark: "#0b75a8",
+  teal: "#0b7d74",
   orange: "#fdaf40",
-  red: "#e52648",
+  red: "#c8102e",
+  link: "#09608a",
   text: "#2b2b2b",
   muted: "#6b6b6b",
   bg: "#f3f6f8",
@@ -18,12 +21,20 @@ export function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/** Plain text → paragraphs; a block of lines starting with "- " becomes a bulleted list. */
 function paragraphs(text: string, style: string): string {
   return text
+    .replace(/\u00a0/g, " ")
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean)
-    .map((p) => `<p style="margin:0 0 14px;${style}">${esc(p).replace(/\n/g, "<br>")}</p>`)
+    .map((p) => {
+      const lines = p.split("\n").map((l) => l.trim());
+      if (lines.every((l) => /^[-–•]\s+/.test(l))) {
+        return `<ul style="margin:0 0 14px;padding-left:20px;${style}">${lines.map((l) => `<li style="margin:0 0 6px">${esc(l.replace(/^[-–•]\s+/, ""))}</li>`).join("")}</ul>`;
+      }
+      return `<p style="margin:0 0 14px;${style}">${esc(p).replace(/\n/g, "<br>")}</p>`;
+    })
     .join("");
 }
 
@@ -47,9 +58,9 @@ function track(url: string, campaign: string, content: string): string {
 
 const fmt = (n: number) => `${n.toLocaleString("cs-CZ").replace(/ /g, " ")} Kč`;
 
-function button(text: string, href: string, color = C.orange): string {
+function button(text: string, href: string, color = C.orange, textColor = C.text): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td style="border-radius:6px;background:${color}">
-<a href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-family:${FONT};font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px">${esc(text)}</a>
+<a class="btn" href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-family:${FONT};font-size:16px;font-weight:bold;color:${textColor};text-decoration:none;border-radius:6px">${esc(text)}</a>
 </td></tr></table>`;
 }
 
@@ -59,17 +70,43 @@ function productCard(p: Product, blurb: string, badge: string, campaign: string)
     ? `<span style="color:${C.red};font-weight:bold;font-size:18px">${fmt(p.price)}</span> <span style="color:${C.muted};text-decoration:line-through;font-size:13px">${fmt(p.priceOriginal)}</span>`
     : `<span style="color:${C.text};font-weight:bold;font-size:18px">${fmt(p.price)}</span>`;
   const badgeHtml = badge
-    ? `<span style="display:inline-block;background:${p.discountPct ? C.red : C.teal};color:#fff;font-size:12px;font-weight:bold;padding:3px 8px;border-radius:4px;margin-bottom:8px">${esc(badge)}</span><br>`
+    ? `<span style="display:inline-block;background:${p.discountPct ? C.red : C.teal};color:#fff;font-size:13px;font-weight:bold;padding:3px 8px;border-radius:4px;margin-bottom:8px">${esc(badge)}</span><br>`
     : "";
   return `<div class="col" style="display:inline-block;vertical-align:top;width:100%;max-width:262px;margin:0 5px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border:1px solid ${C.line};border-radius:8px">
-<tr><td style="padding:12px 12px 0" align="center"><a href="${esc(href)}"><img src="${esc(p.image)}" width="238" alt="${esc(p.name)}" style="display:block;width:100%;max-width:238px;height:auto;border:0;border-radius:6px"></a></td></tr>
+<tr><td style="padding:12px 12px 0" align="center"><a class="img" href="${esc(href)}"><img src="${esc(p.image)}" width="238" alt="${esc(p.name)}" style="display:block;width:100%;max-width:238px;height:auto;border:0;border-radius:6px"></a></td></tr>
 <tr><td style="padding:12px 14px 16px;font-family:${FONT};text-align:left">
-${badgeHtml}<a href="${esc(href)}" style="color:${C.text};text-decoration:none;font-size:15px;font-weight:bold;line-height:1.35">${esc(p.name)}</a>
+${badgeHtml}<a class="lnk" href="${esc(href)}" style="color:${C.text};text-decoration:none;font-size:15px;font-weight:bold;line-height:1.35">${esc(p.name)}</a>
 <p style="margin:8px 0 10px;color:${C.muted};font-size:14px;line-height:1.5">${esc(blurb)}</p>
 <p style="margin:0 0 12px">${price}</p>
-<a href="${esc(href)}" style="display:inline-block;padding:9px 16px;background:${C.blue};color:#fff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:5px">Zobrazit produkt</a>
+<a class="btn" href="${esc(href)}" style="display:inline-block;padding:9px 16px;background:${C.blueDark};color:#fff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:5px">Zobrazit produkt</a>
 </td></tr></table></div>`;
+}
+
+/** Links to pages that build trust and answer practical questions (who we are, delivery, buying advice). */
+const TRUST_PAGES: [string, string][] = [
+  ["/o-nas/", "O nás"],
+  ["/jak-se-zbozi-ke-me-dostane/", "Doprava a doručení"],
+  ["/pruvodce-nakupem/", "Průvodce nákupem"],
+  ["/zakazkova-vyroba-nabytku-pro-deti/", "Zakázková výroba"],
+];
+function trustLinks(env: Env, campaign: string): string {
+  return `<span style="display:inline-block;margin:6px 0 12px">${TRUST_PAGES.map(
+    ([path, label]) => `<a class="flk" href="${esc(track(env.SHOP_URL + path, campaign, "paticka"))}" style="color:${C.link}">${label}</a>`,
+  ).join(" · ")}</span><br>`;
+}
+
+/** Personal sign-off (photo + name + role) – a strong trust signal; shown only when configured in wrangler vars. */
+function signature(env: Env): string {
+  const name = env.SIGNATURE_NAME?.trim();
+  if (!name) return "";
+  const role = env.SIGNATURE_ROLE?.trim();
+  const photo = env.SIGNATURE_PHOTO?.trim();
+  const img = photo
+    ? `<td width="64" style="padding-right:14px;vertical-align:middle"><img src="${esc(photo)}" width="64" height="64" alt="${esc(name)}" style="display:block;width:64px;height:64px;border-radius:50%;border:0;object-fit:cover"></td>`
+    : "";
+  return `<tr><td class="px" style="padding:0 32px 28px;font-family:${FONT}"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${img}
+<td style="vertical-align:middle;font-size:15px;line-height:1.45;color:${C.text};text-align:left">Za celý tým se těší<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
 }
 
 /** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|* and *|UNSUB|* included). */
@@ -92,20 +129,25 @@ export function renderEmail(env: Env, s: EmailState): string {
     .map(
       (x) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef9fe;border-left:4px solid ${C.blue};border-radius:6px"><tr><td style="padding:16px 18px">
-<h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(x.title)}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}
+<h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(x.title)}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}${
+        x.link_url
+          ? `<p style="margin:0"><a class="lnk" href="${esc(track(x.link_url, campaign, "clanek"))}" style="color:${C.link};font-size:15px;font-weight:bold">${esc(x.link_text || "Přečtěte si víc")} →</a></p>`
+          : ""
+      }
 </td></tr></table></td></tr>`,
     )
     .join("");
 
   return `<!DOCTYPE html>
 <html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(s.subject || copy.headline)}</title>
-<style>@media (max-width:620px){.col{max-width:100%!important;margin:0 0 16px!important}.px{padding-left:18px!important;padding-right:18px!important}}</style></head>
+<style>.btn:hover{opacity:.85;text-decoration:underline!important}.lnk:hover,.flk:hover{text-decoration:underline!important;color:${C.blueDark}!important}.img:hover img{opacity:.9}
+@media (max-width:620px){.col{max-width:100%!important;margin:0 0 16px!important}.px{padding-left:18px!important;padding-right:18px!important}}</style></head>
 <body style="margin:0;padding:0;background:${C.bg}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${C.bg}">${esc(copy.preheader)}${"&#8203;&nbsp;".repeat(40)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg}"><tr><td align="center" style="padding:16px 8px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
-<tr><td style="padding:0 8px 10px;font-family:${FONT};font-size:12px;color:${C.muted};text-align:right"><a href="*|WEBVERSION|*" style="color:${C.muted}">Zobrazit e-mail v prohlížeči</a></td></tr>
-<tr><td style="background:${C.card};border-radius:10px 10px 0 0;padding:20px 32px;text-align:center;border-bottom:3px solid ${C.blue}">
+<tr><td style="padding:0 8px 10px;font-family:${FONT};font-size:13px;color:${C.muted};text-align:right"><a class="flk" href="*|WEBVERSION|*" style="color:${C.link}">Zobrazit e-mail v prohlížeči</a></td></tr>
+<tr><td style="background:${C.card};border-radius:10px 10px 0 0;padding:20px 32px 8px;text-align:center">
 <a href="${esc(track(env.SHOP_URL, campaign, "logo"))}"><img src="${LOGO}" width="200" alt="${esc(env.SHOP_NAME)}" style="display:inline-block;width:200px;height:auto;border:0"></a></td></tr>
 <tr><td style="background:${C.card}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 ${hero}
@@ -117,13 +159,15 @@ ${paragraphs(copy.intro, `font-size:16px;line-height:1.6;color:${C.text}`)}
 ${sections}
 <tr><td style="padding:18px 20px 4px;text-align:center;font-size:0">${cards}</td></tr>
 <tr><td class="px" style="padding:10px 32px 4px;font-family:${FONT}">${paragraphs(copy.closing, `font-size:16px;line-height:1.6;color:${C.text}`)}</td></tr>
-<tr><td style="padding:6px 32px 32px">${button(copy.cta_text || "Na e-shop", footerUrl, C.teal)}</td></tr>
+<tr><td style="padding:6px 32px 32px">${button(copy.cta_text || "Na e-shop", footerUrl, C.teal, "#ffffff")}</td></tr>
+${signature(env)}
 </table></td></tr>
 <tr><td style="background:#e9eff3;border-radius:0 0 10px 10px;padding:22px 32px;font-family:${FONT};font-size:13px;line-height:1.6;color:${C.muted};text-align:center">
 <strong style="color:${C.text}">${esc(env.SHOP_NAME)}</strong> – nábytek a vše pro dětský pokojíček<br>
-<a href="mailto:info@svet-pokoju.cz" style="color:${C.muted}">info@svet-pokoju.cz</a> · +420 770 330 792 · <a href="${esc(track(env.SHOP_URL, campaign, "paticka"))}" style="color:${C.muted}">www.svet-pokoju.cz</a><br><br>
+<a class="flk" href="mailto:info@svet-pokoju.cz" style="color:${C.link}">info@svet-pokoju.cz</a> · <a class="flk" href="tel:+420770330792" style="color:${C.link}">+420 770 330 792</a> · <a class="flk" href="${esc(track(env.SHOP_URL, campaign, "paticka"))}" style="color:${C.link}">www.svet-pokoju.cz</a><br><br>
+${trustLinks(env, campaign)}
 Tento e-mail jste obdrželi, protože jste se přihlásili k odběru novinek.<br>
-<a href="*|UNSUB|*" style="color:${C.muted}">Odhlásit se z odběru</a>
+<a class="flk" href="*|UNSUB|*" style="color:${C.link}">Odhlásit se z odběru</a>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;

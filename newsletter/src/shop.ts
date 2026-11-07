@@ -99,3 +99,50 @@ export async function loadCandidates(env: Env, ctx: ExecutionContext, sources: s
   const score = (p: Product) => (p.inStock ? 0 : 10) + (preferDiscount && !p.discountPct ? 5 : 0) + (p.image ? 0 : 20);
   return [...all.values()].sort((a, b) => score(a) - score(b));
 }
+
+export interface ProductPage extends Product {
+  images: string[];
+}
+
+/** Parses a product detail page: real name, current price, stock and the whole photo gallery. */
+export function parseProductPage(html: string, url: string, shopUrl: string): ProductPage | null {
+  const id = html.match(/name="productId" value="(\d+)"/)?.[1];
+  const h1 = html.match(/<div class="p-detail-inner-header">\s*<h1>([\s\S]*?)<\/h1>/)?.[1] ?? html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1];
+  if (!id || !h1) return null;
+  const images = [
+    ...new Set(
+      // Shoptet serves relative paths to some clients (e.g. Cloudflare) – e-mails need absolute URLs
+      [...html.matchAll(/href="((?:https:\/\/cdn\.myshoptet\.com\/usr\/[^/"]+)?\/user\/shop\/big\/[^"]+)"/g)].map((m) => absolute(decodeEntities(m[1] ?? ""), shopUrl)),
+    ),
+  ];
+  const ogImage = html.match(/property="og:image" content="([^"]+)"/)?.[1];
+  if (!images.length && ogImage) images.push(absolute(decodeEntities(ogImage), shopUrl));
+  // og:title carries the lowest current price ("… za 9 119 Kč - …")
+  const ogTitle = decodeEntities(html.match(/property="og:title" content="([^"]+)"/)?.[1] ?? "");
+  const priceTxt = ogTitle.match(/za ([\d\s ]+) Kč/)?.[1] ?? html.match(/class="price-final[^"]*"[^>]*>[\s\S]*?([\d\s ]+)\s*Kč/)?.[1] ?? "0";
+  const orig = html.match(/class="price-standard"[^>]*>[\s\S]*?<span>([\d\s ]+)\s*Kč/)?.[1];
+  const save = html.match(/class="price-save"[^>]*>[^\d]*(\d+)\s*%/)?.[1];
+  const availability = clean(html.match(/class="availability-label"[^>]*>([\s\S]*?)<\/span>/)?.[1] ?? "");
+  const price = Number(priceTxt.replace(/\D/g, "")) || 0;
+  const priceOriginal = orig ? Number(orig.replace(/\D/g, "")) : null;
+  return {
+    id,
+    name: clean(h1),
+    url,
+    image: images[0] ?? "",
+    images: images.slice(0, 24),
+    price,
+    priceOriginal: priceOriginal && priceOriginal > price ? priceOriginal : null,
+    discountPct: save ? Number(save) : null,
+    availability,
+    inStock: /^skladem\b/i.test(availability) && !/skladem do|není skladem|vyprodán/i.test(availability),
+    flags: [],
+  };
+}
+
+export async function loadProductPage(env: Env, ctx: ExecutionContext, pathOrUrl: string): Promise<ProductPage | null> {
+  const url = new URL(pathOrUrl, env.SHOP_URL);
+  if (url.hostname !== new URL(env.SHOP_URL).hostname) throw new Error("Odkaz nevede na e-shop");
+  url.search = "";
+  return parseProductPage(await fetchHtml(url.toString(), ctx), url.toString(), env.SHOP_URL);
+}

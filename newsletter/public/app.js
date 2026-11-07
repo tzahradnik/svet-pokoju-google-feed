@@ -12,11 +12,78 @@ const st = {
   pinned: [],
   candidates: [],
   email: null, // EmailState
+  lists: null, // Ecomail lists, or error message
+  site: null, // catalogue: categories, blog, pages, new products, plan coverage
+  category: null, // chosen {path, name} in the "Kategorie a značky" tab
+  catFilter: "",
+  gallery: {}, // product id -> photo URLs from the product page
 };
 
 /* ---------- helpers ---------- */
 const escapeHtml = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const fmtPrice = (n) => `${Number(n).toLocaleString("cs-CZ")} Kč`;
+const fold = (s) => String(s ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const KIND_LABEL = { brand: "značka", collection: "kolekce", room: "místnost", category: "kategorie" };
+const THUMB = (file) => `https://www.svet-pokoju.cz/user/shop/related/${file}`;
+
+/** Lightweight autocomplete: items(q) → [{label, sub, img, value}], pick(value). Keyboard: ↑ ↓ Enter Esc. */
+function autocomplete(input, list, items, pick) {
+  let current = [];
+  let active = -1;
+  const close = () => { list.classList.add("hidden"); active = -1; };
+  const render = () => {
+    current = items(input.value.trim());
+    if (!current.length) return close();
+    list.innerHTML = current
+      .map((it, i) => `<button type="button" role="option" class="ac-item ${i === active ? "active" : ""}" data-i="${i}">${it.img ? `<img src="${escapeHtml(it.img)}" alt="" loading="lazy">` : ""}<span><span>${escapeHtml(it.label)}</span>${it.sub ? `<small>${escapeHtml(it.sub)}</small>` : ""}</span></button>`)
+      .join("");
+    list.classList.remove("hidden");
+  };
+  input.addEventListener("input", () => { active = -1; render(); });
+  input.addEventListener("focus", () => render());
+  input.addEventListener("keydown", (e) => {
+    if (list.classList.contains("hidden")) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      active = (active + (e.key === "ArrowDown" ? 1 : -1) + current.length) % current.length;
+      render();
+    } else if (e.key === "Enter" && active >= 0) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      pick(current[active].value);
+      close();
+    } else if (e.key === "Escape") close();
+  });
+  list.addEventListener("mousedown", (e) => e.preventDefault()); // keep focus in the input
+  list.addEventListener("click", (e) => {
+    const i = e.target.closest("[data-i]")?.dataset.i;
+    if (i === undefined) return;
+    pick(current[Number(i)].value);
+    close();
+  });
+  input.addEventListener("blur", () => setTimeout(close, 120));
+}
+
+function matchScore(name, q) {
+  const n = fold(name);
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  if (!words.every((w) => n.includes(w))) return -1;
+  return (n.startsWith(words[0]) ? 0 : 10) + n.length / 100;
+}
+
+const catItem = (c) => ({ label: c.name, sub: `${KIND_LABEL[c.kind]} · ${c.path}${c.products ? ` · ${c.products} produktů` : ""}`, value: c });
+
+function categoryItems(q, kinds) {
+  if (!st.site) return [];
+  const pool = st.site.categories.filter((c) => !kinds || kinds.includes(c.kind));
+  if (q.length < 2) return kinds ? pool.slice(0, 40).map(catItem) : [];
+  return pool
+    .map((c) => ({ c, s: matchScore(`${c.name} ${c.brand || ""}`, q) }))
+    .filter((x) => x.s >= 0)
+    .sort((a, b) => a.s - b.s)
+    .slice(0, 12)
+    .map(({ c }) => catItem(c));
+}
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -101,7 +168,7 @@ function setKind(kind) {
 
 function onDefChange() {
   const def = currentDef();
-  st.sources = def ? [...def.sources] : st.kind === "custom" ? st.sources : [];
+  st.sources = def ? [...def.sources] : st.kind === "category" ? (st.category ? [st.category.path] : []) : st.kind === "custom" ? st.sources : [];
   renderSources();
   renderTopicInfo();
 }
@@ -167,6 +234,78 @@ $("#add-source").addEventListener("click", () => {
   renderSources();
 });
 
+autocomplete($("#source-input"), $("#source-list"), (q) => categoryItems(q), (c) => {
+  if (!st.sources.includes(c.path)) st.sources.push(c.path);
+  $("#source-input").value = "";
+  renderSources();
+});
+
+/* ---------- category / brand / room tab ---------- */
+const CAT_KINDS = { "": null, brand: ["brand", "collection"], room: ["room"] };
+$("#cat-filter").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-k]");
+  if (!b) return;
+  st.catFilter = b.dataset.k;
+  $$("#cat-filter button").forEach((x) => x.classList.toggle("active", x === b));
+  $("#cat-input").value = "";
+  $("#cat-input").focus();
+});
+autocomplete($("#cat-input"), $("#cat-list"), (q) => categoryItems(q, CAT_KINDS[st.catFilter]), (c) => chooseCategory(c));
+
+function chooseCategory(c) {
+  st.category = { path: c.path, name: c.name };
+  $("#cat-input").value = c.name;
+  $("#cat-chosen").innerHTML = `<div><strong>${escapeHtml(c.name)}</strong> · ${KIND_LABEL[c.kind] || "kategorie"}</div><div><a href="${escapeHtml(st.session.shopUrl + c.path)}" target="_blank" rel="noopener">${escapeHtml(c.path)}</a>${c.products ? ` · ${c.products} produktů s touto hlavní kategorií` : ""}</div>`;
+  onDefChange();
+}
+
+/* ---------- product index (instant search across the whole catalogue) ---------- */
+let productIndex = null;
+let productIndexLoading = null;
+function loadProductIndex() {
+  productIndexLoading ||= fetch("/api/catalog/products")
+    .then((r) => r.json())
+    .then((d) => (productIndex = d.items.map(([path, name, img]) => ({ path, name, img, f: fold(name) }))))
+    .catch(() => (productIndex = []));
+  return productIndexLoading;
+}
+$("#search-input").addEventListener("focus", () => loadProductIndex().then(() => $("#search-input").value && $("#search-input").dispatchEvent(new Event("input"))), { once: true });
+autocomplete(
+  $("#search-input"),
+  $("#search-list"),
+  (q) => {
+    if (!productIndex || q.length < 2) return [];
+    const words = fold(q).split(/\s+/).filter(Boolean);
+    const out = [];
+    for (const p of productIndex) {
+      if (words.every((w) => p.f.includes(w))) out.push(p);
+      if (out.length >= 60) break;
+    }
+    return out
+      .sort((a, b) => (a.f.startsWith(words[0]) ? 0 : 1) - (b.f.startsWith(words[0]) ? 0 : 1) || a.f.length - b.f.length)
+      .slice(0, 10)
+      .map((p) => ({ label: p.name, sub: p.path.split("/")[1], img: THUMB(p.img), value: p }));
+  },
+  (p) => pinFromCatalog(p.path),
+);
+
+async function pinFromCatalog(path) {
+  try {
+    busy(true, "Načítám produkt z e-shopu…");
+    const { product } = await api(`/api/product?url=${encodeURIComponent(path)}`);
+    const { images, ...p } = product;
+    st.gallery[p.id] = images;
+    if (!st.pinned.some((x) => x.id === p.id)) st.pinned.push(p);
+    renderPinned();
+    $("#search-input").value = "";
+    toast(`Přidáno do e-mailu: ${p.name}`);
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    busy(false);
+  }
+}
+
 function miniCard(p, action, label) {
   return `<div class="mini">
     <img src="${escapeHtml(p.image)}" alt="" loading="lazy">
@@ -215,6 +354,7 @@ async function generate(withFeedback = false) {
     kind: st.kind,
     id: st.kind === "topic" ? $("#topic").value : st.kind === "special" ? $("#special").value : undefined,
     customName: $("#custom-name").value,
+    category: st.kind === "category" ? st.category : undefined,
     sources: st.sources,
     productCount: Number($("#count").value) || 4,
     brief: $("#brief-text").value,
@@ -283,6 +423,15 @@ $("#subject-variants").addEventListener("click", (e) => {
   schedulePreview();
 });
 
+/** Blog articles and guides from the catalogue (+ the one already set, if it is not among them). */
+function articleOptions(selected = "") {
+  const shop = st.session.shopUrl;
+  const items = st.site ? [...st.site.blog.map((a) => ["Blog", a]), ...st.site.pages.filter((p) => p.role).map((p) => ["Stránka", p])] : [];
+  const opts = items.map(([g, a]) => [shop + a.path, `${g}: ${a.name}`]);
+  if (selected && !opts.some(([u]) => u === selected)) opts.unshift([selected, selected]);
+  return `<option value="">– bez odkazu –</option>${opts.map(([u, l]) => `<option value="${escapeHtml(u)}" ${u === selected ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}`;
+}
+
 function renderSectionsEdit() {
   $("#sections-edit").innerHTML = st.email.copy.sections
     .map(
@@ -290,6 +439,10 @@ function renderSectionsEdit() {
       <div class="item-head"><span class="name">Blok ${i + 1}</span><div class="tools"><button class="btn small" type="button" data-del-sec="${i}">Odebrat</button></div></div>
       <label>Nadpis<input data-sec-title="${i}" value="${escapeHtml(s.title)}"></label>
       <label>Text<textarea rows="3" data-sec-text="${i}">${escapeHtml(s.text)}</textarea></label>
+      <div class="grid2">
+        <label>Odkaz „čtěte víc“<select data-sec-link="${i}">${articleOptions(s.link_url)}</select></label>
+        <label>Text odkazu<input data-sec-linktext="${i}" value="${escapeHtml(s.link_text || "")}" placeholder="Přečtěte si víc"></label>
+      </div>
     </div>`,
     )
     .join("");
@@ -305,7 +458,7 @@ $("#sections-edit").addEventListener("click", (e) => {
 });
 $("#add-section").addEventListener("click", () => {
   collectEditor();
-  st.email.copy.sections.push({ title: "", text: "" });
+  st.email.copy.sections.push({ title: "", text: "", link_url: "", link_text: "" });
   renderSectionsEdit();
 });
 
@@ -325,10 +478,11 @@ function renderProductsEdit() {
           <div class="tools">
             <button class="btn small" type="button" data-move="${i}" data-dir="-1" title="Posunout nahoru" ${i === 0 ? "disabled" : ""}>↑</button>
             <button class="btn small" type="button" data-move="${i}" data-dir="1" title="Posunout dolů" ${i === list.length - 1 ? "disabled" : ""}>↓</button>
-            <button class="btn small" type="button" data-hero="${i}" title="Použít fotku jako úvodní obrázek">🖼</button>
+            <button class="btn small" type="button" data-gallery="${i}" title="Vybrat jinou fotku z galerie produktu">Fotky</button>
             <button class="btn small" type="button" data-del-prod="${i}" title="Odebrat">×</button>
           </div>
         </div>
+        <div class="gallery hidden" data-gal="${escapeHtml(p.id)}"></div>
         <label>Popisek<textarea rows="2" data-blurb="${i}">${escapeHtml(pc.blurb)}</textarea></label>
         <label>Odznak<input data-badge="${i}" value="${escapeHtml(pc.badge)}" placeholder="např. Sleva 15 %"></label>
       </div>`;
@@ -352,13 +506,48 @@ $("#products-edit").addEventListener("click", (e) => {
     [list[i], list[j]] = [list[j], list[i]];
   } else if (b.dataset.delProd !== undefined) {
     list.splice(Number(b.dataset.delProd), 1);
-  } else if (b.dataset.hero !== undefined) {
-    const p = productById(list[Number(b.dataset.hero)].id);
-    $("#hero-image").value = p?.image || "";
+  } else if (b.dataset.gallery !== undefined) {
+    return toggleGallery(list[Number(b.dataset.gallery)].id);
+  } else if (b.dataset.useImg !== undefined) {
+    const url = b.dataset.useImg;
+    if (b.dataset.as === "hero") {
+      $("#hero-image").value = url;
+      toast("Fotka nastavena jako úvodní obrázek e-mailu.");
+    } else {
+      [...st.email.products, ...st.candidates].forEach((x) => x.id === b.dataset.pid && (x.image = url));
+    }
   }
   renderProductsEdit();
   schedulePreview();
+  if (b.dataset.useImg !== undefined) toggleGallery(b.dataset.pid); // keep the gallery open after picking
 });
+
+async function toggleGallery(id) {
+  const box = $(`[data-gal="${CSS.escape(id)}"]`);
+  if (!box) return;
+  if (!box.classList.contains("hidden")) return box.classList.add("hidden");
+  const p = productById(id);
+  box.classList.remove("hidden");
+  if (!st.gallery[id]) {
+    box.innerHTML = "<small>Načítám fotky z e-shopu…</small>";
+    try {
+      st.gallery[id] = (await api(`/api/product?url=${encodeURIComponent(p.url)}`)).product.images;
+    } catch (err) {
+      box.innerHTML = `<small class="error">${escapeHtml(err.message)}</small>`;
+      return;
+    }
+  }
+  const imgs = st.gallery[id];
+  box.innerHTML = imgs.length
+    ? `<small>Vyberte fotku pro kartu produktu, nebo ji použijte jako úvodní obrázek e-mailu (fotky z interiéru působí nejlépe).</small><div class="gal-grid">${imgs
+        .map(
+          (u) => `<figure class="${u === p.image ? "current" : ""}"><img src="${escapeHtml(u)}" alt="" loading="lazy"><figcaption>
+            <button class="btn small" type="button" data-use-img="${escapeHtml(u)}" data-pid="${escapeHtml(id)}">Produkt</button>
+            <button class="btn small" type="button" data-use-img="${escapeHtml(u)}" data-pid="${escapeHtml(id)}" data-as="hero">Úvod</button></figcaption></figure>`,
+        )
+        .join("")}</div>`
+    : "<small>Produkt nemá další fotky.</small>";
+}
 
 $("#candidates").addEventListener("click", (e) => {
   const id = e.target.dataset.id;
@@ -380,6 +569,8 @@ function collectEditor() {
   copy.sections = copy.sections.map((s, i) => ({
     title: $(`[data-sec-title="${i}"]`)?.value ?? s.title,
     text: $(`[data-sec-text="${i}"]`)?.value ?? s.text,
+    link_url: $(`[data-sec-link="${i}"]`)?.value ?? s.link_url ?? "",
+    link_text: $(`[data-sec-linktext="${i}"]`)?.value ?? s.link_text ?? "",
   }));
   copy.products = copy.products.map((p, i) => ({
     id: p.id,
@@ -438,10 +629,14 @@ async function loadLists() {
   try {
     const { lists } = await api("/api/ecomail/lists");
     const def = String(st.session.sender.defaultListId || "");
+    st.lists = lists;
+    renderStatus();
     box.innerHTML = lists.length
       ? lists.map((l) => `<label><input type="checkbox" value="${l.id}" ${String(l.id) === def ? "checked" : ""}> ${escapeHtml(l.name)}</label>`).join("")
       : "<small>V Ecomailu nejsou žádné seznamy kontaktů.</small>";
   } catch (err) {
+    st.lists = err.message;
+    renderStatus();
     box.innerHTML = `<small class="error">${escapeHtml(err.message)}</small>`;
   }
 }
@@ -451,8 +646,30 @@ async function finalHtml() {
   return api("/api/render", { method: "POST", body: st.email });
 }
 
+async function runLinkCheck() {
+  collectEditor();
+  const box = $("#link-results");
+  box.innerHTML = "<small>Kontroluji odkazy…</small>";
+  try {
+    const { results, broken } = await api("/api/check-links", { method: "POST", body: st.email });
+    const bad = results.filter((r) => !r.ok);
+    box.innerHTML = broken
+      ? `<p class="err">⚠ ${broken} z ${results.length} odkazů nefunguje:</p><ul class="lc">${bad.map((r) => `<li><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.url.replace(/^https?:\/\/(www\.)?/, ""))}</a><br><small>${escapeHtml(r.note)}</small></li>`).join("")}</ul>`
+      : `<p class="ok">✓ Všech ${results.length} odkazů funguje.</p>`;
+    return bad;
+  } catch (err) {
+    box.innerHTML = `<p class="err">${escapeHtml(err.message)}</p>`;
+    return null;
+  }
+}
+$("#check-links").addEventListener("click", runLinkCheck);
+
 $("#push").addEventListener("click", async () => {
   collectEditor();
+  busy(true, "Kontroluji odkazy v e-mailu…");
+  const bad = await runLinkCheck();
+  busy(false);
+  if (bad?.length && !confirm(`${bad.length} odkazů v e-mailu nefunguje (seznam je pod tlačítkem Zkontrolovat odkazy). Přesto vložit do Ecomailu?`)) return;
   const listIds = $$("#lists input:checked").map((i) => Number(i.value));
   const res = $("#push-result");
   res.className = "";
@@ -499,6 +716,94 @@ $("#copy-html").addEventListener("click", async () => {
   }
 });
 
+/* ---------- connection status (hover / focus shows details) ---------- */
+function renderStatus() {
+  const s = st.session;
+  const host = (() => { try { return new URL(s.shopUrl).hostname.replace(/^www\./, ""); } catch { return s.shopUrl || "e-shop"; } })();
+  const lists = st.lists;
+  const listName = Array.isArray(lists) ? lists.find((l) => String(l.id) === String(s.sender.defaultListId))?.name : "";
+  // [ok | warn | off, label, detail]
+  const rows = [
+    [s.ai ? "ok" : "off", "AI copywriter", s.ai ? `Claude (${s.aiModel}) píše texty e-mailů` : "chybí API klíč Anthropic"],
+    [s.ecomail ? "ok" : "off", "Ecomail API", !s.ecomail ? "chybí API klíč" : Array.isArray(lists) ? `připojeno, ${lists.length} ${lists.length === 1 ? "seznam" : lists.length < 5 ? "seznamy" : "seznamů"} kontaktů` : typeof lists === "string" ? `chyba: ${lists}` : "ověřuji…"],
+    [s.sender.fromEmail ? "ok" : "warn", "Odesílatel", s.sender.fromEmail ? `${s.sender.fromName} <${s.sender.fromEmail}>` : "zatím nenastaven – čeká na ověření domény v Ecomailu"],
+    [s.sender.defaultListId ? "ok" : "warn", "Výchozí seznam", s.sender.defaultListId ? listName || `ID ${s.sender.defaultListId}` : "nevybrán – seznam zaškrtnete při vložení"],
+    ["ok", "Produkty", `načítají se živě z ${host}`],
+    ["ok", "Publikační plán", `${s.planTopics} témat z analýzy klíčových slov`],
+    [st.site ? "ok" : "warn", "Katalog ze sitemapy", st.site ? `${st.site.counts.products.toLocaleString("cs-CZ")} produktů, ${st.site.counts.categories} kategorií, ${st.site.counts.blog} článků · aktualizováno ${new Date(st.site.generated).toLocaleString("cs-CZ", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}` : "načítám…"],
+    [s.signature ? "ok" : "warn", "Osobní podpis", s.signature || "nenastaven"],
+  ];
+  const core = s.ai && s.ecomail && typeof lists !== "string";
+  const notes = rows.filter((r) => r[0] !== "ok").length;
+  const btn = $("#status-btn");
+  btn.className = `status-btn ${core ? "" : "warn"}`;
+  btn.textContent = core ? `✓ Vše napojeno${notes ? ` · ${notes} upozornění` : ""}` : "⚠ Něco není napojené";
+  const icon = { ok: "✓", warn: "!", off: "✕" };
+  $("#status-pop").innerHTML = `<strong>Stav napojení</strong><ul>${rows
+    .map(([k, label, detail]) => `<li class="${k}"><span class="ic" aria-hidden="true">${icon[k]}</span><span><b>${escapeHtml(label)}</b><br>${escapeHtml(detail)}</span></li>`)
+    .join("")}</ul>`;
+}
+// Click toggles the panel too (touch devices have no hover)
+$("#status-btn").addEventListener("click", () => {
+  const open = $("#status").classList.toggle("open");
+  $("#status-btn").setAttribute("aria-expanded", String(open));
+  if (!open) $("#status-btn").blur(); // otherwise :focus-within keeps the panel visible
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#status")) { $("#status").classList.remove("open"); $("#status-btn").setAttribute("aria-expanded", "false"); }
+});
+
+/* ---------- changelog ---------- */
+const TYPE_LABEL = { new: "Novinka", improve: "Vylepšení", fix: "Oprava" };
+$("#changelog-open").addEventListener("click", async () => {
+  const dlg = $("#changelog");
+  dlg.showModal();
+  try {
+    const res = await fetch("/changelog.json", { cache: "no-cache" });
+    const log = await res.json();
+    $("#changelog-body").innerHTML = log
+      .map(
+        (day) => `<section class="cl-day"><h3>${new Date(day.date + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" })}</h3><ul>${day.changes
+          .map((c) => `<li><span class="cl-tag ${c.type}">${TYPE_LABEL[c.type] || c.type}</span> ${escapeHtml(c.text)}</li>`)
+          .join("")}</ul></section>`,
+      )
+      .join("");
+  } catch {
+    $("#changelog-body").innerHTML = `<p class="error">Historii změn se nepodařilo načíst.</p>`;
+  }
+});
+$("#changelog-close").addEventListener("click", () => $("#changelog").close());
+$("#changelog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+/* ---------- plan coverage ---------- */
+$("#coverage-open").addEventListener("click", () => {
+  $("#coverage").showModal();
+  const s = st.site;
+  if (!s) return ($("#coverage-body").innerHTML = `<p class="error">Katalog se nepodařilo načíst.</p>`);
+  const c = s.coverage;
+  $("#coverage-body").innerHTML = `
+    <p class="hint">Porovnání témat z analýzy klíčových slov s kategoriemi e-shopu (podle sitemapy, aktualizováno ${new Date(s.generated).toLocaleString("cs-CZ")}).</p>
+    <section class="cl-day"><h3>Témata bez vlastní kategorie na e-shopu</h3>
+      ${c.topicsSearchOnly.length ? `<p class="hint">Lidé je hledají, ale produkty jdou najít jen vyhledáváním. Vlastní kategorie by pomohla e-mailům i SEO.</p><ul>${c.topicsSearchOnly.map((t) => `<li><strong>${escapeHtml(t.name)}</strong> · ${t.volume.toLocaleString("cs-CZ")} hledání měsíčně</li>`).join("")}</ul>` : "<p>Všechna témata mají kategorii.</p>"}
+    </section>
+    ${c.missingSources?.length ? `<section class="cl-day"><h3>Kategorie z plánu, které už na e-shopu nejsou</h3><ul>${c.missingSources.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></section>` : ""}
+    <section class="cl-day"><h3>Kategorie, které v plánu chybí</h3>
+      <p class="hint">Seřazeno podle počtu produktů s touto hlavní kategorií. Kliknutím připravíte e-mail.</p>
+      <ul class="cov">${c.categoriesWithoutTopic.map((x) => `<li><button type="button" class="linkbtn" data-cov="${escapeHtml(x.path)}">${escapeHtml(x.name)}</button> <small>${x.products} produktů</small></li>`).join("")}</ul>
+    </section>`;
+});
+$("#coverage-body").addEventListener("click", (e) => {
+  const path = e.target.closest("[data-cov]")?.dataset.cov;
+  const c = path && st.site.categories.find((x) => x.path === path);
+  if (!c) return;
+  $("#coverage").close();
+  setKind("category");
+  chooseCategory(c);
+  $("#brief").scrollIntoView({ behavior: "smooth" });
+});
+$$("dialog [data-close]").forEach((b) => b.addEventListener("click", () => b.closest("dialog").close()));
+$("#coverage").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
 /* ---------- start ---------- */
 async function start() {
   st.session = await api("/api/session");
@@ -506,10 +811,7 @@ async function start() {
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
 
-  const warn = [];
-  if (!st.session.ai) warn.push("chybí klíč pro AI");
-  if (!st.session.ecomail) warn.push("Ecomail není napojený");
-  $("#status").innerHTML = warn.length ? `<span class="warn">⚠ ${warn.join(" · ")}</span>` : "Vše napojeno";
+  renderStatus();
 
   $("#topic").innerHTML = st.plan.topics
     .map((t) => `<option value="${t.id}">${escapeHtml(t.name)}${t.volume ? ` (${t.volume.toLocaleString("cs-CZ")}/měs.)` : ""}</option>`)
@@ -521,6 +823,13 @@ async function start() {
   renderRecommended();
   setKind("topic");
   loadLists();
+  api("/api/site")
+    .then((site) => {
+      st.site = site;
+      renderStatus();
+      if (st.email) renderSectionsEdit();
+    })
+    .catch(() => renderStatus());
 
   const saved = loadLocal();
   if (saved?.email) {

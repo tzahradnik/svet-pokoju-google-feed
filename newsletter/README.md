@@ -21,6 +21,17 @@ python3 tools/build_plan.py "<AKW export>.csv" --out src/plan.json
 Topics, keyword regexes and product sources (category paths or `vyhledavani:<query>`) are defined at
 the top of `tools/build_plan.py`.
 
+## Catalogue (sitemap)
+`tools/build_catalog.py` turns `https://www.svet-pokoju.cz/sitemap.xml` (≈ 32 MB, too big for the Workers free CPU
+limit) into `site.json` (categories with real names, brands / collections / rooms, blog articles, info pages,
+newly added products, plan coverage) and `products.json` (index for instant search). GitHub Actions
+(`.github/workflows/update-feed.yml`, every 6 h) publishes it to GitHub Pages under `/newsletter/`; the worker
+reads it from `CATALOG_URL` and falls back to the copy bundled in `public/data/`. New products are detected by
+comparing with the previous run (`firstSeen`), because the sitemap has no lastmod.
+```bash
+python3 tools/build_catalog.py --out public/data --previous public/data   # refresh the bundled copy
+```
+
 ## Local development
 1. `npm install`
 2. `cp .dev.vars.example .dev.vars` and fill in values
@@ -41,3 +52,8 @@ The sender e-mail must be on a domain verified in Ecomail.
 ## Costs
 Cloudflare Workers free plan (100k requests/day). Claude API is paid per use – one generated
 e-mail is roughly 15–25k tokens (≈ 0.10–0.20 USD with Opus 5.5).
+
+## Changelog (Historie změn)
+Every user-visible change, fix or improvement **must** add an entry to `public/changelog.json`
+(newest date first; `type`: `new` | `improve` | `fix`; text in Czech, written for the shop owner).
+The app shows it in the footer → "Historie změn".

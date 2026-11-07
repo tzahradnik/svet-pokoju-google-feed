@@ -1,0 +1,112 @@
+[
+  {
+    "date": "2026-11-07",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Nová karta „Kategorie a značky“: e-mail k libovolné kategorii, značce (Goki, Emitex, Pinkie…), kolekci nebo místnosti. Nabídka se načítá ze sitemapy e-shopu."
+      },
+      {
+        "type": "new",
+        "text": "Odkazy na blog a průvodce: AI u tipů v e-mailu doporučí související článek z blogu nebo Průvodce nákupem a v editoru jde odkaz změnit."
+      },
+      {
+        "type": "new",
+        "text": "Výběr fotek: u každého produktu otevřete tlačítkem „Fotky“ celou galerii z e-shopu a vyberete fotku pro kartu produktu nebo jako úvodní obrázek e-mailu."
+      },
+      {
+        "type": "new",
+        "text": "Rychlé hledání v celém katalogu (přes 9 600 produktů) s našeptáváním a náhledy, bez čekání na vyhledávání e-shopu."
+      },
+      {
+        "type": "new",
+        "text": "Typ kampaně „Novinky v nabídce“: aplikace sama hlídá nově přidané produkty a nabídne z nich e-mail."
+      },
+      {
+        "type": "new",
+        "text": "Kontrola odkazů: před vložením do Ecomailu se ověří, že všechny odkazy v e-mailu fungují (zachytí smazané nebo přesunuté produkty)."
+      },
+      {
+        "type": "new",
+        "text": "Pokrytí plánu (odkaz v patičce): která témata z analýzy klíčových slov nemají kategorii a které kategorie v plánu chybí. Kliknutím rovnou připravíte e-mail."
+      },
+      {
+        "type": "improve",
+        "text": "Patička e-mailu odkazuje na O nás, Dopravu a doručení, Průvodce nákupem a Zakázkovou výrobu."
+      },
+      {
+        "type": "improve",
+        "text": "Pole „Odkud brát produkty“ našeptává kategorie podle názvu, adresu už není potřeba znát."
+      },
+      {
+        "type": "improve",
+        "text": "Stav napojení ukazuje i katalog e-shopu a čas jeho poslední aktualizace."
+      },
+      {
+        "type": "fix",
+        "text": "Téma „Dětské povlečení“ bere produkty z vlastní kategorie e-shopu, ne jen z vyhledávání."
+      },
+      {
+        "type": "fix",
+        "text": "Detail stavu napojení se otevírá jen po najetí na samotný nápis, ne na celou horní lištu."
+      },
+      {
+        "type": "new",
+        "text": "Po najetí na stav napojení v horní liště se zobrazí, co všechno je napojeno: AI, Ecomail, odesílatel, výchozí seznam, zdroj produktů, publikační plán a osobní podpis."
+      },
+      {
+        "type": "new",
+        "text": "Historie změn aplikace v patičce."
+      },
+      {
+        "type": "new",
+        "text": "Volitelný osobní podpis pod e-mailem (fotka, jméno, role). Zobrazí se po doplnění údajů."
+      },
+      {
+        "type": "improve",
+        "text": "Barvy tlačítek, štítků a odkazů v e-mailu mají dostatečný kontrast pro dobrou čitelnost."
+      },
+      {
+        "type": "improve",
+        "text": "Nejmenší písmo v e-mailu je 13 px, odkazy v patičce už nejsou šedé a telefon je klikací."
+      },
+      {
+        "type": "improve",
+        "text": "Tlačítka, názvy produktů a obrázky v e-mailu reagují na najetí myší (v klientech, které to podporují)."
+      },
+      {
+        "type": "improve",
+        "text": "AI píše tipy jako přímé odpovědi na časté otázky zákazníků, umí krátké odrážky a vyhýbá se frázím, které působí strojově."
+      },
+      {
+        "type": "improve",
+        "text": "Odstraněna dekorativní linka pod logem v e-mailu."
+      }
+    ]
+  },
+  {
+    "date": "2026-11-06",
+    "changes": [
+      {
+        "type": "new",
+        "text": "Spuštění nástroje: e-mail z tématu publikačního plánu, akce nebo sezóny, či z vlastního zadání; úpravy textů a produktů s živým náhledem; vložení do Ecomailu jako koncept."
+      },
+      {
+        "type": "new",
+        "text": "Publikační plán s 25 tématy podle analýzy klíčových slov včetně sezónnosti."
+      },
+      {
+        "type": "improve",
+        "text": "Aplikace přesunuta na vlastní adresu nl.svet-pokoju.workers.dev."
+      },
+      {
+        "type": "fix",
+        "text": "Obrázky produktů se v e-mailu zobrazují správně."
+      },
+      {
+        "type": "fix",
+        "text": "Zboží „skladem do 7–21 dní“ se už nepovažuje za skladem."
+      }
+    ]
+  }
+]

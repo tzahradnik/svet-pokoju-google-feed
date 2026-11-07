@@ -25,6 +25,22 @@ jobs:
           python-version: "3.12"
       - name: Vygenerovat feed
         run: python3 build_feed.py --out dist/google-ads-feed.xml
+      # Katalog pro nástroj na newslettery (nl.svet-pokoju.workers.dev): kategorie, blog, novinky, pokrytí plánu.
+      # Chyba katalogu nesmí zastavit feed – v nejhorším se znovu publikuje předchozí verze.
+      - name: Katalog pro newslettery
+        continue-on-error: true
+        run: >
+          python3 newsletter/tools/build_catalog.py --out dist/newsletter --plan newsletter/src/plan.json
+          --previous "https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/,newsletter/public/data"
+      - name: Záloha katalogu při chybě
+        if: always()
+        run: |
+          if [ ! -f dist/newsletter/site.json ]; then
+            mkdir -p dist/newsletter
+            curl -fsSL https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/site.json -o dist/newsletter/site.json \
+              && curl -fsSL https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/products.json -o dist/newsletter/products.json \
+              || cp newsletter/public/data/*.json dist/newsletter/
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

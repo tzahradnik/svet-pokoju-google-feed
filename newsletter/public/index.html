@@ -23,7 +23,10 @@
   <div id="app" class="hidden">
     <header class="topbar">
       <div class="brand"><img src="https://cdn.myshoptet.com/usr/www.svet-pokoju.cz/user/logos/logo-2.png" alt="" width="120"><span>Newslettery</span></div>
-      <div class="status" id="status"></div>
+      <div class="status" id="status">
+        <button type="button" class="status-btn" id="status-btn" aria-describedby="status-pop" aria-expanded="false"></button>
+        <div class="status-pop" id="status-pop" role="tooltip"></div>
+      </div>
       <button class="btn ghost" id="logout">Odhlásit</button>
     </header>
 
@@ -34,6 +37,7 @@
           <h2><span class="step">1</span> Jaký e-mail potřebujete?</h2>
           <div class="tabs" role="tablist">
             <button class="tab active" data-kind="topic" role="tab">Téma z plánu</button>
+            <button class="tab" data-kind="category" role="tab">Kategorie a značky</button>
             <button class="tab" data-kind="special" role="tab">Akce a sezóna</button>
             <button class="tab" data-kind="custom" role="tab">Vlastní</button>
           </div>
@@ -45,6 +49,17 @@
               <select id="topic"></select>
             </label>
             <div id="topic-info" class="topic-info"></div>
+          </div>
+          <div class="kind-pane hidden" data-pane="category">
+            <div class="seg filter" id="cat-filter" role="group" aria-label="Typ">
+              <button type="button" class="active" data-k="">Vše</button>
+              <button type="button" data-k="brand">Značky a kolekce</button>
+              <button type="button" data-k="room">Místnosti</button>
+            </div>
+            <label>Kategorie, značka nebo místnost
+              <span class="ac"><input id="cat-input" placeholder="začněte psát, např. postele, Goki, obývák…" autocomplete="off"><span class="ac-list hidden" id="cat-list" role="listbox"></span></span>
+            </label>
+            <div id="cat-chosen" class="topic-info"></div>
           </div>
           <div class="kind-pane hidden" data-pane="special">
             <label>Typ kampaně
@@ -61,7 +76,7 @@
             <span class="label">Odkud brát produkty</span>
             <div id="sources" class="chips"></div>
             <div class="row">
-              <input id="source-input" placeholder="adresa kategorie (např. /detske-postele/) nebo hledaný výraz">
+              <span class="ac"><input id="source-input" placeholder="název kategorie nebo hledaný výraz" autocomplete="off"><span class="ac-list hidden" id="source-list" role="listbox"></span></span>
               <button class="btn" id="add-source" type="button">Přidat</button>
             </div>
           </div>
@@ -69,7 +84,7 @@
           <div class="field">
             <span class="label">Konkrétní produkty, které musí být v e-mailu <small>(nepovinné)</small></span>
             <div class="row">
-              <input id="search-input" placeholder="hledat produkt na svet-pokoju.cz">
+              <span class="ac"><input id="search-input" placeholder="začněte psát název produktu" autocomplete="off"><span class="ac-list wide hidden" id="search-list" role="listbox"></span></span>
               <button class="btn" id="search-btn" type="button">Hledat</button>
             </div>
             <div id="search-results" class="mini-grid"></div>
@@ -98,7 +113,7 @@
           </label>
           <div id="subject-variants" class="chips small"></div>
           <label>Preheader <small>(text za předmětem ve schránce)</small><input id="preheader"></label>
-          <label>Úvodní obrázek <small>(nepovinné – URL nebo vyberte z produktů níže)</small><input id="hero-image" placeholder="https://…"></label>
+          <label>Úvodní obrázek <small>(nepovinné – URL, nebo tlačítko „Fotky“ u produktu níže)</small><input id="hero-image" placeholder="https://…"></label>
           <label>Nadpis<input id="headline"></label>
           <label>Úvod<textarea id="intro" rows="5"></textarea></label>
           <div class="grid2">
@@ -144,6 +159,10 @@
             <span class="label">Seznamy kontaktů</span>
             <div id="lists" class="lists"><em>Načítám…</em></div>
           </div>
+          <div class="linkcheck">
+            <button class="btn" id="check-links" type="button">Zkontrolovat odkazy</button>
+            <div id="link-results"></div>
+          </div>
           <div class="actions">
             <button class="btn primary big" id="push">Schválit a vložit jako draft do Ecomailu</button>
             <button class="btn" id="download">Stáhnout HTML</button>
@@ -169,7 +188,31 @@
         </div>
       </div>
     </main>
+
+    <footer class="appfooter">
+      <span>Newslettery Světpokojů.cz</span>
+      <span class="footlinks">
+        <button type="button" class="linkbtn" id="coverage-open">Pokrytí plánu</button>
+        <button type="button" class="linkbtn" id="changelog-open">Historie změn</button>
+      </span>
+    </footer>
   </div>
+
+  <dialog id="coverage" class="dialog" aria-labelledby="coverage-title">
+    <div class="dialog-head">
+      <h2 id="coverage-title">Pokrytí publikačního plánu</h2>
+      <button type="button" class="btn ghost small" data-close aria-label="Zavřít">✕</button>
+    </div>
+    <div id="coverage-body" class="dialog-body"><p class="hint">Načítám…</p></div>
+  </dialog>
+
+  <dialog id="changelog" class="dialog" aria-labelledby="changelog-title">
+    <div class="dialog-head">
+      <h2 id="changelog-title">Historie změn</h2>
+      <button type="button" class="btn ghost small" id="changelog-close" aria-label="Zavřít">✕</button>
+    </div>
+    <div id="changelog-body" class="dialog-body"><p class="hint">Načítám…</p></div>
+  </dialog>
 
   <div id="overlay" class="overlay hidden"><div class="spinner"></div><p id="overlay-text">Pracuji…</p></div>
   <div id="toast" class="toast hidden" role="status"></div>

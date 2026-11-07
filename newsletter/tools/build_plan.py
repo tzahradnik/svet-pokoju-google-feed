@@ -56,7 +56,7 @@ TOPICS = [
     ("stolky-zidlicky", "Dětské stolky a židličky", r"stol|stůl|židl|zidl",
      ["/hraci-stoly-a-zidle/", "/psaci-stoly/"], "Místo na kreslení, tvoření a první úkoly."),
     ("povleceni", "Dětské povlečení", r"povlečen|povleceni|povlak",
-     ["vyhledavani:povlečení"], "Oblíbený motiv na polštáři – snazší usínání."),
+     ["/detske-povleceni-2/", "vyhledavani:povlečení"], "Oblíbený motiv na polštáři – snazší usínání."),
     ("nabytek-pokoj", "Nábytek do dětského pokoje", r"skříň|skrin|skřín|komod|regál|regal|polič|polic|knihovn|nábyt|nabyt",
      ["/detsky-nabytek/", "/detsky-obrazkovy-nabytek/"], "Kompletní pokojíček – skříně, komody, regály v jednom stylu."),
     ("doplnky-pokoj", "Koberce a doplňky do dětského pokoje", r"kober|závěs|zaves|tapet|samolep|nálepk|nalepk|nástěnk|nastenk|světýl|svetyl|lamp",

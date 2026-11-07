@@ -18,6 +18,12 @@
     "FROM_NAME": "Světpokojů.cz",
     "FROM_EMAIL": "",
     "REPLY_TO": "info@svet-pokoju.cz",
-    "DEFAULT_LIST_ID": ""
+    "DEFAULT_LIST_ID": "",
+    // Personal sign-off (trust signal): real name, role and a real photo (square, ≥ 128 px, https)
+    "SIGNATURE_NAME": "",
+    "SIGNATURE_ROLE": "",
+    "SIGNATURE_PHOTO": "",
+    // Catalogue built from the sitemap by GitHub Actions (tools/build_catalog.py); bundled copy in public/data/
+    "CATALOG_URL": "https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/"
   }
 }

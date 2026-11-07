@@ -10,6 +10,12 @@ export interface Env {
   FROM_EMAIL: string;
   REPLY_TO: string;
   DEFAULT_LIST_ID: string;
+  /** Optional personal sign-off under the e-mail (name, role, square photo URL). */
+  SIGNATURE_NAME?: string;
+  SIGNATURE_ROLE?: string;
+  SIGNATURE_PHOTO?: string;
+  /** Published catalogue folder (GitHub Pages) – see tools/build_catalog.py */
+  CATALOG_URL?: string;
 }
 
 export interface Product {
@@ -29,6 +35,9 @@ export interface Product {
 export interface EmailSection {
   title: string;
   text: string;
+  /** Optional "read more" link to a blog article / guide on the shop. */
+  link_url?: string;
+  link_text?: string;
 }
 
 export interface EmailProductCopy {
