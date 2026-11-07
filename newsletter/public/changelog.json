@@ -3,6 +3,18 @@
     "date": "2026-11-07",
     "changes": [
       {
+        "type": "improve",
+        "text": "E-maily píše AI hlasem Terezy podle příběhu a tónu značky ze stránky O nás (soubor src/hlas-znacky.md). Text zní osobně a méně strojově."
+      },
+      {
+        "type": "improve",
+        "text": "V textech od AI nejsou dlouhé pomlčky ani znak „&“, aplikace je případně sama nahradí."
+      },
+      {
+        "type": "improve",
+        "text": "Podpis pod e-mailem: „S láskou, Tereza ze Světa Pokojů“."
+      },
+      {
         "type": "new",
         "text": "Osobní podpis pod e-mailem: „Tereza ze Světa Pokojů“ s fotkou."
       },

@@ -116,7 +116,7 @@ function signature(env: Env): string {
     ? `<td width="64" style="padding-right:14px;vertical-align:middle"><img src="${esc(photo)}" width="64" height="64" alt="${esc(name)}" style="display:block;width:64px;height:64px;border-radius:50%;border:0;object-fit:cover"></td>`
     : "";
   return `<tr><td class="px" style="padding:0 32px 28px;font-family:${FONT}"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${img}
-<td style="vertical-align:middle;font-size:15px;line-height:1.45;color:${C.text};text-align:left">Za celý tým se těší<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
+<td style="vertical-align:middle;font-size:15px;line-height:1.45;color:${C.text};text-align:left">S láskou<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
 }
 
 /** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|* and *|UNSUB|* included). */
@@ -173,7 +173,7 @@ ${sections}
 ${signature(env)}
 </table></td></tr>
 <tr><td style="background:#e9eff3;border-radius:0 0 10px 10px;padding:22px 32px;font-family:${FONT};font-size:13px;line-height:1.6;color:${C.muted};text-align:center">
-<strong style="color:${C.text}">${esc(env.SHOP_NAME)}</strong> – nábytek a vše pro dětský pokojíček<br>
+<strong style="color:${C.text}">${esc(env.SHOP_NAME)}</strong> · dětské pokojíčky, hračky a vše kolem nich<br>
 <a class="flk" href="mailto:info@svet-pokoju.cz" style="color:${C.link}">info@svet-pokoju.cz</a> · <a class="flk" href="tel:+420770330792" style="color:${C.link}">+420 770 330 792</a> · <a class="flk" href="${esc(track(env.SHOP_URL, campaign, "paticka"))}" style="color:${C.link}">www.svet-pokoju.cz</a><br><br>
 ${trustLinks(env, campaign)}
 Tento e-mail jste obdrželi, protože jste se přihlásili k odběru novinek.<br>

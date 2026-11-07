@@ -10,6 +10,8 @@
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
+  // hlas-znacky.md is bundled as plain text and fed to the AI prompt
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }],
   // Non-secret defaults. Secrets (APP_PASSWORD, SESSION_SECRET, ANTHROPIC_API_KEY,
   // ECOMAIL_API_KEY) are set with `npx wrangler secret put <NAME>` or in .dev.vars locally.
   "vars": {

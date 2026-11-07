@@ -57,3 +57,7 @@ e-mail is roughly 15–25k tokens (≈ 0.10–0.20 USD with Opus 5.5).
 Every user-visible change, fix or improvement **must** add an entry to `public/changelog.json`
 (newest date first; `type`: `new` | `improve` | `fix`; text in Czech, written for the shop owner).
 The app shows it in the footer → "Historie změn".
+
+## Hlas značky
+
+Příběh, tón hlasu a povinná pravidla psaní (bez dlouhých pomlček a znaku „&“) jsou v `src/hlas-znacky.md`. AI ho čte při každém generování. Po úpravě souboru stačí aplikaci znovu nasadit (`npx wrangler deploy`).
