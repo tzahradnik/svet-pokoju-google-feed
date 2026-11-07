@@ -6,7 +6,7 @@ import planJson from "./plan.json";
 import { catalogFile, getSite, relatedArticles } from "./catalog";
 import { checkLinks, extractLinks } from "./links";
 import { loadCandidates, loadProductPage, loadSource, sourceUrl } from "./shop";
-import type { EmailState, Env, Plan, Product } from "./types";
+import type { Hook, EmailState, Env, Plan, Product } from "./types";
 
 const basePlan = planJson as Plan;
 // "Novinky" is driven by the catalogue (products that newly appeared in the sitemap), not by categories
@@ -52,7 +52,45 @@ interface GenerateRequest {
   pinnedProducts?: Product[];
   previous?: EmailState;
   feedback?: string;
+  hook?: Hook;
+  greetByName?: boolean;
 }
+
+const HOOK_TYPES = ["none", "personal", "question", "review", "deadline", "age", "story", "numbers"];
+const cut = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+
+/** Validates the hook settings from the browser; facts the hook shows must come from the user. */
+function cleanHook(env: Env, h: Hook | undefined): Hook {
+  const type = (HOOK_TYPES.includes(h?.type ?? "") ? h!.type : "none") as Hook["type"];
+  const out: Hook = { type };
+  if (type === "question") {
+    out.question = cut(h?.question, 300);
+    out.asker = cut(h?.asker, 60);
+    if (!out.question) throw new HttpError(400, "Vyplňte otázku od zákazníka, nebo zvolte jiný úvodní háček.");
+  }
+  if (type === "review") {
+    out.quote = cut(h?.quote, 400);
+    out.author = cut(h?.author, 60);
+    out.rating = Math.min(5, Math.max(1, Math.round(Number(h?.rating) || 5)));
+    if (!out.quote) throw new HttpError(400, "Vložte text recenze, nebo zvolte jiný úvodní háček.");
+  }
+  if (type === "deadline") {
+    out.deadlineWhat = cut(h?.deadlineWhat, 120);
+    out.deadline = cut(h?.deadline, 60);
+    if (!out.deadline || !out.deadlineWhat) throw new HttpError(400, "Vyplňte termín i to, čeho se týká, nebo zvolte jiný úvodní háček.");
+  }
+  if (type === "age") {
+    out.ages = (h?.ages ?? [])
+      .map((a) => ({ label: cut(a?.label, 30), url: cut(a?.url, 300) }))
+      .filter((a) => a.label && a.url)
+      .map((a) => ({ ...a, url: a.url.startsWith("/") ? env.SHOP_URL + a.url : a.url }))
+      .filter((a) => /^https:\/\//.test(a.url))
+      .slice(0, 4);
+    if (a_len(out.ages) < 2) throw new HttpError(400, "Pro výběr podle věku vyplňte aspoň dvě tlačítka s odkazem.");
+  }
+  return out;
+}
+const a_len = (x?: unknown[]) => x?.length ?? 0;
 
 /** One progress line sent to the browser while an e-mail is being generated. */
 export interface Progress {
@@ -74,6 +112,17 @@ async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateReques
   const defaults = (topic ?? special)?.sources ?? (r.kind === "category" ? [r.category!.path] : []);
   const sources = r.sources?.length ? r.sources : defaults;
   if (!sources.length && !r.pinnedProducts?.length && !isNews) throw new HttpError(400, "Zadejte aspoň jednu kategorii nebo vyhledávání pro výběr produktů.");
+  const hook = cleanHook(env, r.hook);
+  const HOOK_NAMES: Record<string, string> = {
+    personal: "osobní dopis od Terezy s fotkou",
+    question: "skutečná otázka od zákazníka, AI na ni odpoví v prvním tipu",
+    review: "skutečná recenze zákazníka",
+    deadline: "pruh s termínem",
+    age: "výběr podle věku dítěte",
+    story: "mini pohádka na úvod",
+    numbers: "slib v číslech v nadpisu",
+  };
+  if (hook.type !== "none") report({ type: "step", text: `Úvodní háček: ${HOOK_NAMES[hook.type]}.` });
   const productCount = Math.min(Math.max(r.productCount ?? 4, 1), 8);
   report({ type: "step", text: `Téma: ${name}${r.previous ? " (úprava podle vaší poznámky)" : ""}.` });
   const site = await getSite(env, ctx).catch(() => null);
@@ -125,10 +174,11 @@ async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateReques
     articles,
     previous: r.previous?.copy,
     feedback: r.feedback,
+    hook,
   }, (chars, expected) => report({ type: "ai", chars, expected }));
   report({ type: "step", text: "Kontroluji výsledek: produkty jen z nabídky, odkazy jen na existující články, bez dlouhých pomlček a znaku „&“." });
   if (!copy.hero_cta_url && sources[0] && !sources[0].startsWith("vyhledavani:")) copy.hero_cta_url = sourceUrl(env, sources[0]);
-  const state: EmailState = { campaign: name, subject: copy.subject_variants[0] ?? name, copy, products: candidates, heroImage: r.previous?.heroImage ?? "" };
+  const state: EmailState = { campaign: name, subject: copy.subject_variants[0] ?? name, copy, products: candidates, heroImage: r.previous?.heroImage ?? "", hook, greetByName: r.greetByName !== false };
   return { state, candidates, articles };
 }
 
@@ -206,7 +256,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   }
   if (path === "/api/render" && req.method === "POST") {
     const state = await body<EmailState>(req);
-    return new Response(renderEmail(env, state), { headers: { "Content-Type": "text/html; charset=utf-8" } });
+    return new Response(renderEmail(env, state, { preview: url.searchParams.has("preview") }), { headers: { "Content-Type": "text/html; charset=utf-8" } });
   }
   if (path === "/api/ecomail/lists") return json({ lists: await listLists(env) });
   if (path === "/api/ecomail/draft" && req.method === "POST") {

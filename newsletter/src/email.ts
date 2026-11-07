@@ -1,4 +1,4 @@
-import type { EmailState, Env, Product } from "./types";
+import type { EmailState, Env, Hook, Product } from "./types";
 
 const C = {
   // Brand colours, darkened where white text sits on them so every pair passes WCAG AA (≥ 4.5:1)
@@ -120,9 +120,80 @@ function signature(env: Env): string {
 <tr><td align="center" style="font-size:15px;line-height:1.45;color:${C.text};text-align:center">S láskou<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
 }
 
-/** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|* and *|UNSUB|* included). */
-export function renderEmail(env: Env, s: EmailState): string {
+/** Sample name shown in the app preview instead of the Ecomail merge tag. */
+const PREVIEW_NAME = "Ondřeji";
+
+/** "Dobrý den," → greeting by first name in the vocative, with a fallback for contacts without a name. */
+function greet(intro: string, preview: boolean, tykani: boolean): string {
+  const m = intro.match(/^\s*(Dobrý den|Ahoj|Milí rodiče|Dobrý večer)\s*,?\s*/i);
+  const word = m?.[1] ?? (tykani ? "Ahoj" : "Dobrý den");
+  const rest = m ? intro.slice(m[0].length) : intro;
+  const line = preview ? `${word}, ${PREVIEW_NAME},` : `*|IF:VOKATIV|*${word}, *|VOKATIV|*,*|ELSE:|*${word},*|END:IF|*`;
+  return `${line}\n\n${rest.replace(/^\n+/, "")}`;
+}
+
+const stars = (n: number) => "★".repeat(n) + "☆".repeat(5 - n);
+
+/** Opening hook blocks. Each returns table rows for its place in the layout. */
+function hookTop(h: Hook | undefined, text: string): string {
+  if (h?.type !== "deadline") return "";
+  return `<tr><td class="px" style="background:#fff3dc;padding:14px 32px;font-family:${FONT};text-align:center;color:#6b4200">
+<div style="font-size:16px;font-weight:bold;line-height:1.4">⏰ ${esc(h.deadlineWhat ?? "")}: ${esc(h.deadline ?? "")}</div>${text ? `<div style="font-size:14px;line-height:1.5;margin-top:4px">${esc(text)}</div>` : ""}</td></tr>`;
+}
+
+function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string {
+  const box = (inner: string, bg = "#f6f1fb", border = "#b9a2d6") =>
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:${bg};border-radius:10px;border-left:4px solid ${border}"><tr><td style="padding:16px 18px;font-family:${FONT}">${inner}</td></tr></table>`;
+  const label = (t: string) => `<div style="font-size:13px;font-weight:bold;color:${C.muted};margin:0 0 6px">${t}</div>`;
+  switch (h?.type) {
+    case "personal": {
+      const name = env.SIGNATURE_NAME?.trim();
+      if (!name) return "";
+      const photo = env.SIGNATURE_PHOTO?.trim();
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px"><tr>${
+        photo ? `<td width="48" style="padding-right:12px;vertical-align:middle"><img src="${esc(photo)}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border-radius:50%;border:0;object-fit:cover"></td>` : ""
+      }<td style="vertical-align:middle;font-family:${FONT};font-size:14px;line-height:1.4;color:${C.muted}">Píše vám<br><strong style="color:${C.text};font-size:15px">${esc(name)}</strong></td></tr></table>`;
+    }
+    case "question":
+      return box(
+        `${label("Otázka, kterou jsem dostala")}<div style="font-size:18px;line-height:1.45;font-style:italic;color:${C.text}">„${esc(h.question ?? "")}“</div>${
+          h.asker ? `<div style="font-size:14px;color:${C.muted};margin-top:6px">píše ${esc(h.asker)}</div>` : ""
+        }${text ? `<div style="font-size:15px;color:${C.text};margin-top:10px">${esc(text)}</div>` : ""}`,
+        "#eef9fe",
+        C.blue,
+      );
+    case "review":
+      return box(
+        `<div style="font-size:20px;letter-spacing:2px;color:#e0a100;margin:0 0 6px" aria-label="${h.rating ?? 5} z 5 hvězdiček">${stars(h.rating ?? 5)}</div><div style="font-size:17px;line-height:1.5;font-style:italic;color:${C.text}">„${esc(h.quote ?? "")}“</div>${
+          h.author ? `<div style="font-size:14px;color:${C.muted};margin-top:6px">${esc(h.author)}</div>` : ""
+        }`,
+        "#fff9e8",
+        "#e0a100",
+      );
+    case "story":
+      return text ? box(`${label("🌙 Malá pohádka na úvod")}<div style="font-size:16px;line-height:1.6;font-style:italic;color:${C.text}">${esc(text)}</div>`) : "";
+    default:
+      return "";
+  }
+}
+
+function hookAfterIntro(h: Hook | undefined, campaign: string): string {
+  if (h?.type !== "age" || !h.ages?.length) return "";
+  const btns = h.ages
+    .map(
+      (a) =>
+        `<a class="btn" href="${esc(track(a.url, campaign, "vek"))}" style="display:inline-block;margin:4px;padding:10px 16px;border:2px solid ${C.blue};border-radius:99px;color:${C.blueDark};font-family:${FONT};font-size:15px;font-weight:bold;text-decoration:none">${esc(a.label)}</a>`,
+    )
+    .join("");
+  return `<tr><td class="px" style="padding:4px 32px 14px;font-family:${FONT};text-align:center"><div style="font-size:16px;font-weight:bold;color:${C.text};margin:0 0 6px">Kolik je vašemu dítěti?</div>${btns}</td></tr>`;
+}
+
+/** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|*, *|UNSUB|* and *|VOKATIV|* included).
+ *  `preview` shows a sample name instead of merge tags (app preview only). */
+export function renderEmail(env: Env, s: EmailState, opts: { preview?: boolean } = {}): string {
   const { copy, campaign } = s;
+  const hookText = (copy.hook ?? "").trim();
+  const intro = s.greetByName ? greet(copy.intro, Boolean(opts.preview), /^\s*ahoj/i.test(copy.intro)) : copy.intro;
   const byId = new Map(s.products.map((p) => [p.id, p]));
   const cards = copy.products
     .map((pc) => {
@@ -161,11 +232,14 @@ export function renderEmail(env: Env, s: EmailState): string {
 <tr><td style="background:${C.card};border-radius:10px 10px 0 0;padding:20px 32px 8px;text-align:center">
 <a href="${esc(track(env.SHOP_URL, campaign, "logo"))}"><img src="${LOGO}" width="200" alt="${esc(env.SHOP_NAME)}" style="display:inline-block;width:200px;height:auto;border:0"></a></td></tr>
 <tr><td style="background:${C.card}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+${hookTop(s.hook, hookText)}
 ${hero}
 <tr><td class="px" style="padding:28px 32px 6px;font-family:${FONT}">
+${hookAboveHeadline(env, s.hook, hookText)}
 <h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:${C.text}">${esc(copy.headline)}</h1>
-${paragraphs(copy.intro, `font-size:16px;line-height:1.6;color:${C.text}`)}
+${paragraphs(intro, `font-size:16px;line-height:1.6;color:${C.text}`)}
 </td></tr>
+${hookAfterIntro(s.hook, campaign)}
 <tr><td style="padding:6px 32px 26px">${button(copy.hero_cta_text || "Prohlédnout nabídku", heroUrl)}</td></tr>
 ${sections}
 <tr><td style="padding:18px 20px 4px;text-align:center;font-size:0">${cards}</td></tr>

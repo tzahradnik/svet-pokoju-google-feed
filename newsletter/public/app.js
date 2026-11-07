@@ -494,11 +494,15 @@ async function generate(withFeedback = false) {
     brief: $("#brief-text").value,
     tone: $("#tone").value,
     pinnedProducts: st.pinned,
+    hook: readHook("hk"),
+    greetByName: $("#greet-name").checked,
   };
   if (withFeedback && st.email) {
     collectEditor();
     req.previous = st.email;
     req.feedback = $("#feedback").value;
+    req.hook = st.email.hook ?? { type: "none" };
+    req.greetByName = Boolean(st.email.greetByName);
   }
   const prog = startProgress(withFeedback ? "Přepisuji e-mail podle poznámky" : "Píšu návrh e-mailu");
   let ok = false;
@@ -544,6 +548,7 @@ function fillEditor() {
   renderVariants();
   renderSectionsEdit();
   renderProductsEdit();
+  renderHookEdit();
 }
 
 function renderVariants() {
@@ -703,6 +708,11 @@ function collectEditor() {
   st.email.subject = $("#subject").value;
   st.email.heroImage = $("#hero-image").value.trim();
   FIELDS.forEach(([sel, key]) => (copy[key] = $(sel).value));
+  if ($("#hke-type").value) {
+    st.email.hook = readHook("hke");
+    st.email.greetByName = $("#hke-greet").checked;
+    copy.hook = $("#hke-text").value;
+  }
   copy.sections = copy.sections.map((s, i) => ({
     title: $(`[data-sec-title="${i}"]`)?.value ?? s.title,
     text: $(`[data-sec-text="${i}"]`)?.value ?? s.text,
@@ -732,7 +742,7 @@ async function refreshPreview() {
   collectEditor();
   saveLocal();
   try {
-    const html = await api("/api/render", { method: "POST", body: st.email });
+    const html = await api("/api/render?preview", { method: "POST", body: st.email });
     const frame = $("#preview");
     frame.srcdoc = html;
     frame.classList.remove("hidden");
@@ -754,6 +764,176 @@ $$(".seg button").forEach((b) =>
     $("#preview").style.width = b.dataset.w;
   }),
 );
+
+/* ---------- opening hook ---------- */
+// Places in the e-mail layout, top to bottom; "slot" places exist only when a hook uses them
+const HOOK_LAYOUT = [
+  ["top", "Pruh s termínem", true],
+  ["hero", "Úvodní fotka"],
+  ["above", "Háček nad nadpisem", true],
+  ["headline", "Nadpis"],
+  ["intro", "Úvod (Dobrý den, …)"],
+  ["after", "Výběr pod úvodem", true],
+  ["button", "Hlavní tlačítko"],
+  ["tips", "Tipy"],
+  ["products", "Produkty"],
+  ["sign", "Podpis Terezy"],
+];
+const ex = {
+  box: (inner, bg = "#f6f1fb", border = "#b9a2d6") => `<div style="background:${bg};border-left:4px solid ${border};border-radius:8px;padding:10px 12px">${inner}</div>`,
+  label: (t) => `<div style="font-size:11px;font-weight:700;color:#5b6b76;margin-bottom:4px">${t}</div>`,
+};
+const HOOKS = {
+  none: { label: "Bez háčku", place: [], where: "E-mail začíná rovnou nadpisem a úvodem.", example: "" },
+  personal: {
+    label: "Osobní dopis od Terezy",
+    place: ["above", "intro"],
+    where: "Nad nadpisem fotka a jméno Terezy, úvod je napsaný jako osobní zpráva.",
+    example: `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><img src="/img/podpis-tereza.jpg" alt="" width="34" height="34" style="border-radius:50%"><div style="font-size:12px;color:#5b6b76;line-height:1.3">Píše vám<br><b style="color:#22303a">Tereza ze Světa Pokojů</b></div></div><b>Jak vybrat první velkou postel</b><p>Dobrý den, poslední týdny se mě často ptáte, kdy je ten pravý čas přejít z postýlky do velké postele. Sepsala jsem, co se nám osvědčilo.</p>`,
+  },
+  question: {
+    label: "Otázka od zákazníka",
+    place: ["above", "tips"],
+    where: "Rámeček se skutečnou otázkou nad nadpisem. AI na ni odpoví v prvním tipu.",
+    example: ex.box(`${ex.label("Otázka, kterou jsem dostala")}<i style="font-size:14px">„Od kolika let může dítě spát nahoře na patrové posteli?“</i><div style="font-size:12px;color:#5b6b76;margin-top:4px">píše Jana z Brna</div><div style="margin-top:6px">Odpověď jsem sepsala hned níž.</div>`, "#eef9fe", "#14b1ef"),
+    fields: [
+      ["question", "Otázka (skutečná, jak ji zákazník napsal)", "textarea", "Od kolika let může dítě spát nahoře na patrové posteli?"],
+      ["asker", "Kdo se ptá (bez příjmení)", "input", "Jana z Brna"],
+    ],
+  },
+  review: {
+    label: "Recenze zákazníka",
+    place: ["above"],
+    where: "Rámeček s hvězdičkami a citací skutečné recenze nad nadpisem.",
+    example: ex.box(`<div style="color:#e0a100;letter-spacing:2px">★★★★★</div><i style="font-size:14px">„Postel dorazila za tři dny, montáž zvládl manžel za hodinu a malá z ní nechce vylézt.“</i><div style="font-size:12px;color:#5b6b76;margin-top:4px">Petra, Olomouc</div>`, "#fff9e8", "#e0a100"),
+    fields: [
+      ["quote", "Text recenze (skutečný, beze změn)", "textarea", "Zkopírujte recenzi ze Shoptetu nebo Heureky"],
+      ["author", "Autor (jméno, případně město)", "input", "Petra, Olomouc"],
+      ["rating", "Hodnocení", "rating"],
+    ],
+  },
+  deadline: {
+    label: "Termín, který běží",
+    place: ["top"],
+    where: "Oranžový pruh úplně nahoře nad úvodní fotkou. AI připíše jednu větu, proč termín hlídat.",
+    example: `<div style="background:#fff3dc;color:#6b4200;text-align:center;padding:10px;border-radius:6px"><b>⏰ Postel na míru pod stromeček: objednávky do 20. listopadu</b><div style="font-size:12px;margin-top:2px">Výroba trvá několik týdnů, ať to Ježíšek stihne.</div></div>`,
+    fields: [
+      ["deadlineWhat", "Čeho se termín týká", "input", "Postel na míru pod stromeček"],
+      ["deadline", "Termín", "input", "objednávky do 20. listopadu"],
+    ],
+  },
+  age: {
+    label: "Výběr podle věku dítěte",
+    place: ["after"],
+    where: "Pod úvodem otázka „Kolik je vašemu dítěti?“ a tlačítka do kategorií. V Ecomailu pak uvidíte, kdo kam klikl.",
+    example: `<div style="text-align:center"><b>Kolik je vašemu dítěti?</b><div style="margin-top:6px">${["0-2 roky", "3-6 let", "7+ let"].map((l) => `<span style="display:inline-block;margin:2px;padding:4px 10px;border:2px solid #14b1ef;border-radius:99px;color:#0e8fc3;font-weight:700;font-size:12px">${l}</span>`).join("")}</div></div>`,
+    fields: [["ages", "Tlačítka (text a odkaz na kategorii)", "ages"]],
+  },
+  story: {
+    label: "Mini pohádka",
+    place: ["above"],
+    where: "Krátká smyšlená pohádka kurzívou nad nadpisem, úvod na ni naváže. Píše ji AI.",
+    example: ex.box(`${ex.label("🌙 Malá pohádka na úvod")}<i>Rytíř Matyáš se rozhodl, že už nebude spát v kolébce. „Rytíři přece spí v hradu,“ prohlásil a začal z polštářů stavět hradby…</i>`),
+  },
+  numbers: {
+    label: "Slib v číslech",
+    place: ["headline", "tips"],
+    where: "Nadpis slíbí konkrétní počet rad a tipy ho přesně splní.",
+    example: `<b style="font-size:15px">3 věci, na které myslet při výběru matrace</b><p>Dobrý den, matrace se kupuje na roky, tak ať je to dobrá volba…</p>`,
+  },
+};
+const DEFAULT_AGES = [
+  { label: "0-2 roky", url: "/kojenecke-zbozi/" },
+  { label: "3-6 let", url: "/detske-postele/" },
+  { label: "7+ let", url: "/postele-pro-mladez/" },
+];
+
+function hookOptions(selected) {
+  return Object.entries(HOOKS).map(([k, h]) => `<option value="${k}"${k === selected ? " selected" : ""}>${escapeHtml(h.label)}</option>`).join("");
+}
+
+function hookFieldsHtml(prefix, hook) {
+  const def = HOOKS[hook.type];
+  if (!def?.fields) return "";
+  return def.fields
+    .map(([key, label, kind, ph]) => {
+      const id = `${prefix}-${key}`;
+      const val = escapeHtml(hook[key] ?? "");
+      if (kind === "textarea") return `<label>${label}<textarea id="${id}" rows="2" placeholder="${escapeHtml(ph)}">${val}</textarea></label>`;
+      if (kind === "rating") {
+        const r = Number(hook.rating) || 5;
+        return `<label>${label}<select id="${id}">${[5, 4, 3].map((n) => `<option value="${n}"${n === r ? " selected" : ""}>${"★".repeat(n)}${"☆".repeat(5 - n)}</option>`).join("")}</select></label>`;
+      }
+      if (kind === "ages") {
+        const ages = hook.ages?.length ? hook.ages : DEFAULT_AGES;
+        return `<div class="field"><span class="label">${label}</span>${ages
+          .map((a, i) => `<div class="row age-row"><input id="${id}-l${i}" value="${escapeHtml(a.label)}" aria-label="Text tlačítka ${i + 1}"><input id="${id}-u${i}" value="${escapeHtml(a.url)}" aria-label="Odkaz tlačítka ${i + 1}"></div>`)
+          .join("")}<small>Odkaz může být cesta na e-shopu (např. /detske-postele/) nebo celá adresa.</small></div>`;
+      }
+      return `<label>${label}<input id="${id}" value="${val}" placeholder="${escapeHtml(ph)}"></label>`;
+    })
+    .join("");
+}
+
+function readHook(prefix) {
+  const type = $(`#${prefix}-type`)?.value || "none";
+  const hook = { type };
+  for (const [key, , kind] of HOOKS[type]?.fields ?? []) {
+    if (kind === "ages") {
+      hook.ages = [0, 1, 2, 3].map((i) => ({ label: $(`#${prefix}-ages-l${i}`)?.value.trim(), url: $(`#${prefix}-ages-u${i}`)?.value.trim() })).filter((a) => a.label && a.url);
+    } else if (kind === "rating") hook.rating = Number($(`#${prefix}-${key}`)?.value) || 5;
+    else hook[key] = $(`#${prefix}-${key}`)?.value.trim() ?? "";
+  }
+  return hook;
+}
+
+/** Schematic of the e-mail with the hook's place highlighted, plus a sample. */
+function hookInfoHtml(type) {
+  const h = HOOKS[type] ?? HOOKS.none;
+  const rows = HOOK_LAYOUT.filter(([k, , slot]) => !slot || h.place.includes(k))
+    .map(([k, label]) => `<li class="${h.place.includes(k) ? "hit" : ""}">${label}</li>`)
+    .join("");
+  return `<div class="hook-info-grid"><div><div class="hook-info-cap">Kde v e-mailu</div><ol class="hook-map">${rows}</ol></div>
+<div><div class="hook-info-cap">${escapeHtml(h.label)}</div><p class="hook-where">${escapeHtml(h.where)}</p>${h.example ? `<div class="hook-ex">${h.example}</div>` : ""}</div></div>`;
+}
+
+function renderHookUi(prefix, hook) {
+  $(`#${prefix}-fields`).innerHTML = hookFieldsHtml(prefix, hook);
+  $(`#${prefix}-pop`).innerHTML = hookInfoHtml(hook.type);
+}
+
+// Info "i" button: hover, keyboard focus or click toggles the popover
+$$(".hook-info").forEach((wrap) => {
+  const btn = wrap.querySelector("button");
+  const set = (on) => {
+    wrap.classList.toggle("open", on);
+    btn.setAttribute("aria-expanded", String(on));
+  };
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    set(!wrap.classList.contains("open"));
+  });
+  document.addEventListener("click", (e) => !wrap.contains(e.target) && set(false));
+  document.addEventListener("keydown", (e) => e.key === "Escape" && set(false));
+});
+
+$("#hk-type").innerHTML = hookOptions("personal");
+$("#hk-type").addEventListener("change", () => renderHookUi("hk", { type: $("#hk-type").value }));
+renderHookUi("hk", { type: $("#hk-type").value });
+
+function renderHookEdit() {
+  const hook = st.email.hook ?? { type: "none" };
+  $("#hke-type").innerHTML = hookOptions(hook.type);
+  $("#hke-greet").checked = Boolean(st.email.greetByName);
+  $("#hke-text").value = st.email.copy.hook ?? "";
+  $("#hke-text-wrap").classList.toggle("hidden", !["question", "deadline", "story"].includes(hook.type));
+  renderHookUi("hke", hook);
+}
+$("#hke-type").addEventListener("change", () => {
+  collectEditor();
+  renderHookEdit();
+  schedulePreview();
+});
 
 /* ---------- approve ---------- */
 async function loadLists() {

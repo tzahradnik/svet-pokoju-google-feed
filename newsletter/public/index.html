@@ -99,11 +99,17 @@
               <select id="tone"><option value="vykani">Vykání</option><option value="tykani">Tykání</option></select>
             </label>
           </div>
+          <div class="field hook-field">
+            <span class="label">Úvodní háček <small>(prvek na začátku, který čtenáře zaujme)</small></span>
+            <div class="row hook-row"><select id="hk-type" aria-label="Úvodní háček"></select><span class="hook-info"><button type="button" class="info-btn" aria-label="Ukázka a umístění v e-mailu" aria-expanded="false" aria-controls="hk-pop">i</button><div class="hook-pop" id="hk-pop" role="tooltip"></div></span></div>
+            <div id="hk-fields" class="hook-fields"></div>
+            <label class="check"><input type="checkbox" id="greet-name" checked><span>Oslovit čtenáře jménem <small>(„Dobrý den, Ondřeji,“, kdo jméno v Ecomailu nemá, dostane „Dobrý den,“)</small></span></label>
+          </div>
           <label>Doplňující zadání <small>(sleva, kód, termín, tón…)</small>
             <textarea id="brief-text" rows="3" placeholder="např. Sleva 10 % s kódem POSTEL10 do neděle, zmínit dopravu zdarma nad 3 000 Kč"></textarea>
           </label>
           <button class="btn primary big" id="generate">Vygenerovat návrh e-mailu</button>
-          <p class="hint">Generování trvá obvykle 20–60 sekund.</p>
+          <p class="hint">Generování trvá obvykle 20 až 60 sekund.</p>
         </section>
 
         <section class="card hidden" id="editor">
@@ -113,6 +119,13 @@
           </label>
           <div id="subject-variants" class="chips small"></div>
           <label>Preheader <small>(text za předmětem ve schránce)</small><input id="preheader"></label>
+          <div class="field hook-field">
+            <span class="label">Úvodní háček</span>
+            <div class="row hook-row"><select id="hke-type" aria-label="Úvodní háček"></select><span class="hook-info"><button type="button" class="info-btn" aria-label="Ukázka a umístění v e-mailu" aria-expanded="false" aria-controls="hke-pop">i</button><div class="hook-pop" id="hke-pop" role="tooltip"></div></span></div>
+            <div id="hke-fields" class="hook-fields"></div>
+            <label id="hke-text-wrap">Text háčku <small>(napsala AI)</small><textarea id="hke-text" rows="3"></textarea></label>
+            <label class="check"><input type="checkbox" id="hke-greet"><span>Oslovit čtenáře jménem <small>(v náhledu je ukázkové jméno, v Ecomailu se doplní skutečné)</small></span></label>
+          </div>
           <label>Úvodní obrázek <small>(nepovinné – URL, nebo tlačítko „Fotky“ u produktu níže)</small><input id="hero-image" placeholder="https://…"></label>
           <label>Nadpis<input id="headline"></label>
           <label>Úvod<textarea id="intro" rows="5"></textarea></label>

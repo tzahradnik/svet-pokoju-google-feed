@@ -58,6 +58,27 @@ export interface EmailCopy {
   products: EmailProductCopy[];
   closing: string;
   cta_text: string;
+  /** Text the AI writes for the opening hook (mini story, lead-in line…); empty when the hook needs none. */
+  hook?: string;
+}
+
+/** Opening element that grabs attention at the top of the e-mail. */
+export type HookType = "none" | "personal" | "question" | "review" | "deadline" | "age" | "story" | "numbers";
+
+export interface Hook {
+  type: HookType;
+  /** question: the real customer question and who asked (e.g. "Jana z Brna") */
+  question?: string;
+  asker?: string;
+  /** review: real customer review, its author and star rating 1-5 */
+  quote?: string;
+  author?: string;
+  rating?: number;
+  /** deadline: what the deadline is for and the date text (e.g. "do 20. listopadu") */
+  deadlineWhat?: string;
+  deadline?: string;
+  /** age: three buttons leading to categories */
+  ages?: { label: string; url: string }[];
 }
 
 /** Everything the editor holds; sent back to the server for rendering / Ecomail. */
@@ -67,6 +88,9 @@ export interface EmailState {
   copy: EmailCopy;
   products: Product[];
   heroImage: string;
+  hook?: Hook;
+  /** Greet by first name in the vocative (Ecomail *|VOKATIV|* with a fallback for contacts without a name). */
+  greetByName?: boolean;
 }
 
 export interface PlanTopic {

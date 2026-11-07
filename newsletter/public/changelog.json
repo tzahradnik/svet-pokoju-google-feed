@@ -4,6 +4,14 @@
     "changes": [
       {
         "type": "new",
+        "text": "Úvodní háček: na začátek e-mailu můžete dát osobní dopis od Terezy, skutečnou otázku nebo recenzi zákazníka, pruh s termínem, výběr podle věku dítěte, mini pohádku nebo slib v číslech. Tlačítko „i“ ukáže příklad a místo v e-mailu."
+      },
+      {
+        "type": "new",
+        "text": "Oslovení jménem: „Dobrý den, Ondřeji,“ (5. pád z Ecomailu). Kdo jméno nemá, dostane „Dobrý den,“. V náhledu je ukázkové jméno."
+      },
+      {
+        "type": "new",
         "text": "Při generování se zobrazuje průběh: ukazatel, odhad zbývajícího času (zpřesňuje se podle předchozích generování) a co se právě děje: odkud se berou produkty, kolik jich je skladem a ve slevě, které články a podklady AI používá a jaká pravidla dodržuje."
       },
       {

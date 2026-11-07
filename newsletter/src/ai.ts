@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { EmailCopy, Env, Product } from "./types";
+import type { EmailCopy, Env, Hook, Product } from "./types";
 
 export const MODEL = "claude-opus-5-5";
 
@@ -45,7 +45,7 @@ function cleanDeep<T>(v: T): T {
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["subject_variants", "preheader", "headline", "intro", "hero_cta_text", "hero_cta_url", "sections", "products", "closing", "cta_text"],
+  required: ["subject_variants", "preheader", "headline", "intro", "hero_cta_text", "hero_cta_url", "sections", "products", "closing", "cta_text", "hook"],
   properties: {
     subject_variants: { type: "array", items: { type: "string" }, description: "3 varianty předmětu" },
     preheader: { type: "string" },
@@ -73,6 +73,7 @@ const SCHEMA = {
     },
     closing: { type: "string", description: "Závěrečný odstavec" },
     cta_text: { type: "string", description: "Text závěrečného tlačítka" },
+    hook: { type: "string", description: "Text úvodního háčku podle zadání, jinak prázdný řetězec" },
   },
 } as const;
 
@@ -91,6 +92,30 @@ export interface GenerateInput {
   articles: { name: string; url: string }[];
   previous?: EmailCopy;
   feedback?: string;
+  hook?: Hook;
+}
+
+/** Instructions for the chosen opening hook. User-supplied facts (question, review, deadline) are quoted, never invented. */
+export function hookPrompt(h: Hook | undefined): string {
+  const head = "Úvodní háček (prvek na začátku e-mailu, který má čtenáře hned zaujmout):";
+  switch (h?.type) {
+    case "personal":
+      return `${head} osobní dopis od Terezy. Nad nadpisem je její fotka a jméno. Úvod napiš jako osobní zprávu: první věta řekne, proč píšeš právě teď (co teď rodiče řeší, na co se zákazníci ptají), bez vymyšlených konkrétních historek. Pole hook nech prázdné.`;
+    case "question":
+      return `${head} na začátku e-mailu je skutečná otázka od zákazníka (${h.asker || "zákazník"}): „${h.question}“. Nadpis a úvod na ni navazují, ale úvod neříká, že odpověď je níž (to říká text háčku), a nejmenuje znovu, kdo se ptal. První blok (sections[0]) na ni přímo a prakticky odpovídá, takže aspoň jeden blok musí být. Otázku necituj znovu celou. Do pole hook napiš jednu krátkou větu, která naláká k odpovědi (např. „Odpověď jsem sepsala hned níž.“).`;
+    case "review":
+      return `${head} na začátku je skutečná recenze zákazníka (${h.author || "zákazník"}): „${h.quote}“. Úvod na ni může krátce navázat, ale recenzi znovu necituj, nic k ní nepřidávej a nevymýšlej další recenze. Pole hook nech prázdné.`;
+    case "deadline":
+      return `${head} úplně nahoře je pruh s termínem: „${h.deadlineWhat}: ${h.deadline}“. Do pole hook napiš jednu krátkou větu, proč termín hlídat. Úvod na termín naváže. Žádné jiné termíny, lhůty doručení ani sliby si nevymýšlej.`;
+    case "age":
+      return `${head} hned pod úvodem je otázka „Kolik je vašemu dítěti?“ s tlačítky ${(h.ages ?? []).map((a) => `„${a.label}“`).join(", ")}. Úvod ať končí větou, která k výběru přirozeně vede. Pole hook nech prázdné.`;
+    case "story":
+      return `${head} mini pohádka. Do pole hook napiš 2 až 3 krátké věty: jasně smyšlený pohádkový příběh s dětskou postavou (vymyšlené jméno je v pořádku), který laskavě a s humorem uvede téma e-mailu. Nesmí působit jako skutečná historka z rodiny ani od zákazníka a nesmí v něm být konkrétní produkt. Úvod na pohádku plynule naváže.`;
+    case "numbers":
+      return `${head} slib v číslech. Nadpis postav jako konkrétní slib s číslem (např. „3 věci, na které myslet při výběru matrace“) a e-mail ho musí splnit: počet bodů v blocích (sections) přesně odpovídá číslu. Pole hook nech prázdné.`;
+    default:
+      return "Pole hook nech prázdné.";
+  }
 }
 
 function productLine(p: Product): string {
@@ -109,6 +134,7 @@ function buildPrompt(i: GenerateInput): string {
     i.questions.length ? `Časté otázky z vyhledávání: ${i.questions.join("; ")}.` : "",
     `URL kategorií pro hlavní tlačítko: ${i.categoryUrls.join(", ")}.`,
     i.brief ? `Zadání od uživatele (má přednost): ${i.brief}` : "",
+    hookPrompt(i.hook),
     i.articles.length ? `Články a průvodci na e-shopu, na které můžeš z bloku odkázat:\n${i.articles.map((a) => `- ${a.name} | ${a.url}`).join("\n")}` : "",
     `Kandidáti produktů:\n${i.candidates.map(productLine).join("\n")}`,
   ];
