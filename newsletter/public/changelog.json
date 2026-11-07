@@ -3,6 +3,14 @@
     "date": "2026-11-07",
     "changes": [
       {
+        "type": "fix",
+        "text": "Odrážky v tipech se v e-mailu zobrazí jako seznam, i když jim předchází úvodní věta."
+      },
+      {
+        "type": "improve",
+        "text": "AI v popiscích produktů nepřidává vlastnosti, které nejsou v názvu nebo datech e-shopu, a kontroluje překlepy v předmětech."
+      },
+      {
         "type": "new",
         "text": "Nová karta „Kategorie a značky“: e-mail k libovolné kategorii, značce (Goki, Emitex, Pinkie…), kolekci nebo místnosti. Nabídka se načítá ze sitemapy e-shopu."
       },

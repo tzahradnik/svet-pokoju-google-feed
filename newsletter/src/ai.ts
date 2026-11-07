@@ -12,7 +12,7 @@ Zásady:
 - Produkty vybírej výhradně z dodaného seznamu kandidátů podle jejich "id". Vyber nejvhodnější pro téma, preferuj zboží skladem a s fotkou; u akcí preferuj zboží se slevou.
 - Předmět: do 60 znaků, láká k otevření, může obsahovat jedno emoji. Dej 3 odlišné varianty.
 - Preheader: 60–100 znaků, doplňuje předmět, neopakuje ho.
-- Popisek produktu (blurb): 1–2 věty, proč ho rodiče ocení. Odznak (badge): krátký štítek jako "Sleva 15 %", "Tip", "Skladem" nebo prázdný řetězec.
+- Popisek produktu (blurb): 1–2 věty, proč ho rodiče ocení. O produktu znáš jen to, co je v jeho názvu, ceně, dostupnosti a štítcích – nepřidávej vlastnosti, které tam nejsou (materiál, zvuk, funkce, certifikace, rozměry). Čísla v názvu ber doslova (např. „16cm“ je velikost). Popisek staví na tom, komu a k čemu se produkt hodí. Odznak (badge): krátký štítek jako "Sleva 15 %", "Tip", "Skladem" nebo prázdný řetězec.
 - Sekce (sections): 0–2 krátké obsahové bloky s praktickou radou. Ideálně odpověď na konkrétní častou otázku z analýzy: titulek je otázka nebo „Tip od Světpokojů.cz“ / „Věděli jste, že…“, text začíná přímou odpovědí. Konkrétní čísla (rozměry, věk dítěte, výšky) jen pokud jsou obecně platná a ověřitelná. Každá max. 3 věty, nebo krátký výčet 2–4 bodů (každý bod na vlastním řádku začínajícím „- “).
 - Pokud dostaneš seznam článků z blogu nebo průvodců e-shopu a některý přímo souvisí s blokem, vyplň u bloku link_url (přesně jedna z dodaných URL) a link_text (krátká výzva, např. „Přečtěte si celý návod“). Jinak nech obě pole prázdná. Žádné jiné odkazy si nevymýšlej.
 - Text v polích je prostý text bez HTML a bez markdownu; nový odstavec odděl prázdným řádkem. Nepoužívej pevné mezery.
@@ -21,7 +21,8 @@ Ať text nepůsobí jako generovaný AI:
 - Žádné prenadpisy (krátké slovo nebo fráze nad nadpisem), žádné nadpisy ve stylu „Objevte…“, „Ponořte se…“, „Vše, co potřebujete vědět“.
 - Žádné obecné floskule („v dnešní uspěchané době“, „není nic lepšího než“, „dopřejte svému dítěti to nejlepší“, „ať už…, nebo…“) a žádné hromadění přídavných jmen.
 - Neopakuj stejnou informaci v úvodu, sekcích, popiscích i závěru – každý blok přináší něco nového. Raději kratší e-mail než nafouknutý.
-- Piš jako člověk z e-shopu, který sortiment zná: konkrétně, věcně, s jedním lidským detailem z praxe rodičů.`;
+- Piš jako člověk z e-shopu, který sortiment zná: konkrétně, věcně, s jedním lidským detailem z praxe rodičů.
+- Před odevzdáním zkontroluj pravopis a překlepy, hlavně v předmětech a názvech produktů.`;
 
 const SCHEMA = {
   type: "object",

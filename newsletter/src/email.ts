@@ -29,11 +29,21 @@ function paragraphs(text: string, style: string): string {
     .map((p) => p.trim())
     .filter(Boolean)
     .map((p) => {
-      const lines = p.split("\n").map((l) => l.trim());
-      if (lines.every((l) => /^[-–•]\s+/.test(l))) {
-        return `<ul style="margin:0 0 14px;padding-left:20px;${style}">${lines.map((l) => `<li style="margin:0 0 6px">${esc(l.replace(/^[-–•]\s+/, ""))}</li>`).join("")}</ul>`;
+      // a block may mix a lead sentence and bullet lines – group consecutive lines of the same type
+      const runs: { list: boolean; lines: string[] }[] = [];
+      for (const l of p.split("\n").map((x) => x.trim()).filter(Boolean)) {
+        const list = /^[-–•]\s+/.test(l);
+        const last = runs[runs.length - 1];
+        if (last && last.list === list) last.lines.push(l);
+        else runs.push({ list, lines: [l] });
       }
-      return `<p style="margin:0 0 14px;${style}">${esc(p).replace(/\n/g, "<br>")}</p>`;
+      return runs
+        .map((r) =>
+          r.list
+            ? `<ul style="margin:0 0 14px;padding-left:20px;${style}">${r.lines.map((l) => `<li style="margin:0 0 6px">${esc(l.replace(/^[-–•]\s+/, ""))}</li>`).join("")}</ul>`
+            : `<p style="margin:0 0 14px;${style}">${r.lines.map(esc).join("<br>")}</p>`,
+        )
+        .join("");
     })
     .join("");
 }
