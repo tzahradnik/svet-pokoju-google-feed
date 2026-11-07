@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "new",
+        "text": "Osobní podpis pod e-mailem: „Tereza ze Světa Pokojů“ s fotkou."
+      },
+      {
+        "type": "new",
         "text": "Napojení na Ecomail je hotové: odesílatel info@email.svet-pokoju.cz (ověřená doména), odpovědi chodí na info@svet-pokoju.cz a výchozí seznam je „Odběratelé newsletteru [e-shop]“. Do Ecomailu se vkládá jen koncept, odeslání spouštíte v Ecomailu sami."
       },
       {
