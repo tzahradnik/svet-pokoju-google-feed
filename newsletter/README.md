@@ -58,6 +58,12 @@ Every user-visible change, fix or improvement **must** add an entry to `public/c
 (newest date first; `type`: `new` | `improve` | `fix`; text in Czech, written for the shop owner).
 The app shows it in the footer → "Historie změn".
 
+## Návod pro tým (public/navod.html)
+Team guide at https://nl.svet-pokoju.workers.dev/navod (public, no password, `noindex`; never put the password in it).
+Every change that alters what users see or do **must** also update `public/navod.html` in the same commit
+(texts, buttons, steps, warnings) and bump the date in `#doc-updated`. Its "Poslední změny" section loads
+`changelog.json` automatically. Linked from the app footer ("Návod") and the login screen.
+
 ## Hlas značky
 
 Příběh, tón hlasu a povinná pravidla psaní (bez dlouhých pomlček a znaku „&“) jsou v `src/hlas-znacky.md`. AI ho čte při každém generování. Po úpravě souboru stačí aplikaci znovu nasadit (`npx wrangler deploy`).
