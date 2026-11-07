@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "improve",
+        "text": "Podpis Terezy s fotkou je v e-mailu zarovnaný na střed."
+      },
+      {
+        "type": "improve",
         "text": "E-maily píše AI hlasem Terezy podle příběhu a tónu značky ze stránky O nás (soubor src/hlas-znacky.md). Text zní osobně a méně strojově."
       },
       {

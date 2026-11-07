@@ -112,11 +112,12 @@ function signature(env: Env): string {
   if (!name) return "";
   const role = env.SIGNATURE_ROLE?.trim();
   const photo = env.SIGNATURE_PHOTO?.trim();
+  // Centred and stacked: photo above, text below
   const img = photo
-    ? `<td width="64" style="padding-right:14px;vertical-align:middle"><img src="${esc(photo)}" width="64" height="64" alt="${esc(name)}" style="display:block;width:64px;height:64px;border-radius:50%;border:0;object-fit:cover"></td>`
+    ? `<tr><td align="center" style="padding-bottom:10px"><img src="${esc(photo)}" width="72" height="72" alt="${esc(name)}" style="display:block;margin:0 auto;width:72px;height:72px;border-radius:50%;border:0;object-fit:cover"></td></tr>`
     : "";
-  return `<tr><td class="px" style="padding:0 32px 28px;font-family:${FONT}"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${img}
-<td style="vertical-align:middle;font-size:15px;line-height:1.45;color:${C.text};text-align:left">S láskou<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
+  return `<tr><td class="px" align="center" style="padding:0 32px 28px;font-family:${FONT};text-align:center"><table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto">${img}
+<tr><td align="center" style="font-size:15px;line-height:1.45;color:${C.text};text-align:center">S láskou<br><strong>${esc(name)}</strong>${role ? `<br><span style="color:${C.muted};font-size:14px">${esc(role)}</span>` : ""}</td></tr></table></td></tr>`;
 }
 
 /** Renders the final e-mail HTML (Ecomail merge tags *|WEBVERSION|* and *|UNSUB|* included). */
