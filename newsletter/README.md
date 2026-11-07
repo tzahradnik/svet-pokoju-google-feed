@@ -1,13 +1,13 @@
 # Newsletter tool – svet-pokoju.cz
 
-Password-protected web app: pick a topic from the publication plan (built from the AKW keyword
+Web app behind Cloudflare Access (one-time e-mail code): pick a topic from the publication plan (built from the AKW keyword
 analysis), a sale or seasonal campaign, or a custom brief → the app loads products live from
 svet-pokoju.cz, Claude writes the copy → user edits text/products with a live preview → approved
 e-mail is inserted into Ecomail as a **campaign draft** (never sent automatically).
 
 ## Stack
 - Cloudflare Workers (free plan) + static assets in `public/` (vanilla JS, no build step)
-- `src/index.ts` – API router; `src/auth.ts` – shared password + signed session cookie
+- `src/index.ts` – API router; `src/auth.ts` – Cloudflare Access JWT check (password + session cookie only as fallback when Access vars are unset)
 - `src/shop.ts` – parses product cards from category/search pages on svet-pokoju.cz (cached 1 h)
 - `src/ai.ts` – Claude (`claude-opus-5-5`, structured JSON output, server-side refusal fallback)
 - `src/email.ts` – responsive HTML e-mail (Ecomail merge tags `*|WEBVERSION|*`, `*|UNSUB|*`, UTM links)
@@ -49,6 +49,15 @@ npm run deploy
 Non-secret defaults (sender name/e-mail, default list id) are in `wrangler.jsonc` → `vars`.
 The sender e-mail must be on a domain verified in Ecomail.
 
+## Login (Cloudflare Access)
+Account info@svet-pokoju.cz → Zero Trust (Free plan, team `royal-limit-1491`). Login method: One-time PIN only.
+- App **Newslettery Světpokojů.cz** (Worker `nl`, all traffic incl. previews) with policy **Tým newsletterů** (Allow, list of e-mails).
+- App **Newslettery: veřejné stránky** with policy **Veřejné stránky** (Bypass, Everyone) for `/navod`, `/img/*`
+  (Tereza's photo loads inside sent e-mails) and `/changelog.json`.
+- **Add or remove a person:** Zero Trust → Access controls → Policies → Tým newsletterů → Emails.
+- `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` in `wrangler.jsonc` make the Worker verify the Access JWT on every `/api/*`
+  call and turn the password login off. `APP_PASSWORD` / `SESSION_SECRET` are only a fallback for local dev.
+
 ## Costs
 Cloudflare Workers free plan (100k requests/day). Claude API is paid per use – one generated
 e-mail is roughly 15–25k tokens (≈ 0.10–0.20 USD with Opus 5.5).
@@ -59,7 +68,7 @@ Every user-visible change, fix or improvement **must** add an entry to `public/c
 The app shows it in the footer → "Historie změn".
 
 ## Návod pro tým (public/navod.html)
-Team guide at https://nl.svet-pokoju.workers.dev/navod (public, no password, `noindex`; never put the password in it).
+Team guide at https://nl.svet-pokoju.workers.dev/navod (public, `noindex`).
 Every change that alters what users see or do **must** also update `public/navod.html` in the same commit
 (texts, buttons, steps, warnings) and bump the date in `#doc-updated`. The footer link "Změny v nástroji" opens a dialog that loads
 `changelog.json` automatically. The guide has a short and a full version (`?verze=strucny|plny`); keep both in sync. Linked from the app footer ("Návod") and the login screen.

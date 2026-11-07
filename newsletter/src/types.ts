@@ -1,6 +1,9 @@
 export interface Env {
   ASSETS: Fetcher;
   APP_PASSWORD: string;
+  /** Cloudflare Access: team domain (xyz.cloudflareaccess.com) and application AUD tag. When both are set, login is by one-time e-mail code only. */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
   SESSION_SECRET: string;
   ANTHROPIC_API_KEY: string;
   ECOMAIL_API_KEY?: string;

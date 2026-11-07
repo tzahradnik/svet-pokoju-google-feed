@@ -86,7 +86,7 @@
   <section class="card" data-v="strucny" id="strucne">
     <h2>Newsletter v šesti krocích</h2>
     <ol class="steps">
-      <li><strong class="t">Přihlaste se</strong>Otevřete <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a> a zadejte heslo, které vám osobně dá správce nástroje.</li>
+      <li><strong class="t">Přihlaste se</strong>Otevřete <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a> zadejte svůj e-mail a klikněte na <span class="ui">Send login code</span>. Kód, který vám přijde e-mailem, opište do stránky. Pustí vás jen e-mail, který správce povolil.</li>
       <li><strong class="t">Vyberte téma</strong>Nejjednodušší je záložka <span class="ui">Téma z plánu</span>. Sleva, kód nebo termín patří do pole <span class="ui">Doplňující zadání</span>, AI si je sama nevymyslí.</li>
       <li><strong class="t">Nechte e-mail vygenerovat</strong>Klikněte na <span class="ui">Vygenerovat návrh e-mailu</span> a počkejte 20 až 60 sekund.</li>
       <li><strong class="t">Přečtěte a upravte</strong>Vpravo je náhled, vlevo všechno upravíte. Zkontrolujte hlavně ceny, rozměry a tvrzení o produktech. Když se vám text nelíbí, napište poznámku a klikněte na <span class="ui">Přegenerovat s poznámkou</span>.</li>
@@ -94,7 +94,7 @@
       <li><strong class="t">Odešlete v Ecomailu</strong>Najděte koncept v Kampaních, pošlete si testovací e-mail a jako příjemce vyberte jen kontakty se souhlasem (segment se štítkem <code>shpt_newsletters</code>).</li>
     </ol>
     <div class="ok">Nástroj e-mail <strong>nikdy sám neodešle</strong>, odesíláte vždy vy v Ecomailu.</div>
-    <div class="note">Otázky a recenze zákazníků v úvodním háčku musí být skutečné. Heslo nikomu neposílejte e-mailem ani do chatu.</div>
+    <div class="note">Otázky a recenze zákazníků v úvodním háčku musí být skutečné. Přihlašovací kód nikomu nepřeposílejte.</div>
     <p>Něco nejde nebo potřebujete víc? <button type="button" class="linkish" data-set="plny" style="border:0;background:none;padding:0;font:inherit;color:#09608a;text-decoration:underline;cursor:pointer">Otevřít podrobný návod</button></p>
   </section>
 
@@ -117,8 +117,10 @@
     <p><a class="cta" href="https://nl.svet-pokoju.workers.dev/">Otevřít nástroj</a></p>
     <ul>
       <li>Adresa: <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a>. Funguje v jakémkoli prohlížeči, nejlépe na počítači.</li>
-      <li>Přihlašuje se jen <strong>heslem</strong>, bez jména. Heslo dostanete od správce nástroje osobně. Neposílejte ho e-mailem ani do skupinových chatů.</li>
-      <li>Přihlášení vydrží 12 hodin, pak se přihlásíte znovu. Na sdíleném počítači se odhlaste tlačítkem <span class="ui">Odhlásit</span> vpravo nahoře.</li>
+      <li>Přihlašuje se <strong>jednorázovým kódem na e-mail</strong>, žádné heslo není. Zadejte svůj e-mail, klikněte na <span class="ui">Send login code</span> a kód z e-mailu (přijde od Cloudflare) opište do stránky. Přihlašovací stránka je v angličtině, je to služba Cloudflare, která nástroj chrání.</li>
+      <li>Pustí vás jen e-mail, který správce nástroje povolil. Kód přijde jen na povolený e-mail. Když nepřijde, zkontrolujte spam a ozvěte se správci, ať vás přidá.</li>
+      <li>Přihlášení vydrží 24 hodin, pak si necháte poslat nový kód. Na sdíleném počítači se odhlaste tlačítkem <span class="ui">Odhlásit</span> vpravo nahoře (po najetí myší ukáže, kdo je přihlášený).</li>
+      <li>Přihlašovací kód nikomu nepřeposílejte.</li>
       <li>Rozpracovaný e-mail se ukládá v prohlížeči. Když stránku zavřete, po návratu na něm můžete pokračovat (na stejném počítači a v tomtéž prohlížeči).</li>
     </ul>
     <p>Vlevo nahoře vedle loga je stav <span class="ui">✓ Vše napojeno</span>. Po najetí myší ukáže, co je připojené (AI, Ecomail, katalog e-shopu, odesílatel). Pokud tam svítí <span class="ui">⚠ Něco není napojené</span>, ozvěte se správci.</p>
@@ -213,8 +215,8 @@
     <h2><span class="num">8</span> Když něco nejde</h2>
     <table>
       <tr><th>Problém</th><th>Co dělat</th></tr>
-      <tr><td>Nejde se přihlásit</td><td>Zkontrolujte heslo (velká a malá písmena). Heslo mohlo být změněno, zeptejte se správce.</td></tr>
-      <tr><td>„Přihlášení vypršelo“</td><td>Přihlaste se znovu, rozpracovaný e-mail zůstane.</td></tr>
+      <tr><td>Nepřišel přihlašovací kód</td><td>Zkontrolujte spam a překlep v e-mailu. Kód chodí jen na e-maily, které správce povolil, požádejte ho o přidání.</td></tr>
+      <tr><td>Nástroj chce znovu kód</td><td>Přihlášení po 24 hodinách vyprší. Nechte si poslat nový kód, rozpracovaný e-mail zůstane.</td></tr>
       <tr><td>Generování skončí chybou</td><td>Zkuste to znovu. Pomůže i méně produktů nebo jiný zdroj produktů.</td></tr>
       <tr><td>„Ve zvolených kategoriích se nenašly žádné produkty“</td><td>Přidejte jinou kategorii nebo vyhledávání v poli <span class="ui">Odkud brát produkty</span>.</td></tr>
       <tr><td>Kontrola odkazů hlásí chybu</td><td>Opravte nebo smažte odkaz, který vede na neexistující stránku (třeba v bloku s tipem).</td></tr>

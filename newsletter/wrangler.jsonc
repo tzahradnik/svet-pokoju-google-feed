@@ -26,6 +26,11 @@
     "SIGNATURE_ROLE": "",
     "SIGNATURE_PHOTO": "https://nl.svet-pokoju.workers.dev/img/podpis-tereza.jpg",
     // Catalogue built from the sitemap by GitHub Actions (tools/build_catalog.py); bundled copy in public/data/
-    "CATALOG_URL": "https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/"
+    "CATALOG_URL": "https://tzahradnik.github.io/svet-pokoju-google-feed/newsletter/",
+    // Login by one-time e-mail code (Cloudflare Access, Zero Trust team royal-limit-1491). Who may sign in is
+    // the Access policy "Tým newsletterů"; /navod, /img/* and /changelog.json are public (app "Newslettery: veřejné stránky").
+    // With both set, the password login is off and the Worker verifies the Access JWT on every /api/* call.
+    "ACCESS_TEAM_DOMAIN": "royal-limit-1491.cloudflareaccess.com",
+    "ACCESS_AUD": "b2e93a1fd51e1fd20b748b3d69fa167d31b32d0c5701f41126da9c2d0b4855f6"
   }
 }

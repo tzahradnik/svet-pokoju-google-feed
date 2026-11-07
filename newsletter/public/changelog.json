@@ -3,6 +3,10 @@
     "date": "2026-11-07",
     "changes": [
       {
+        "type": "new",
+        "text": "Přihlášení jednorázovým kódem na e-mail místo společného hesla. Do nástroje se dostane jen e-mail, který správce povolil, přihlášení vydrží 24 hodin. Návod a obrázky v e-mailech zůstávají veřejné."
+      },
+      {
         "type": "improve",
         "text": "Změny v nástroji už nejsou vypsané přímo v návodu. Najdete je pod odkazem „Změny v nástroji“ v patičce návodu."
       },

@@ -1,5 +1,5 @@
 import { generateCopy, MODEL } from "./ai";
-import { checkPassword, clearCookie, isAuthenticated, sessionCookie } from "./auth";
+import { accessEnabled, accessUser, checkPassword, clearCookie, isAuthenticated, sessionCookie } from "./auth";
 import { createDraft, listLists } from "./ecomail";
 import { renderEmail } from "./email";
 import planJson from "./plan.json";
@@ -186,6 +186,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   const path = url.pathname;
 
   if (path === "/api/login" && req.method === "POST") {
+    if (accessEnabled(env)) return json({ error: "Přihlášení heslem je vypnuté, přihlaste se e-mailovým kódem." }, 410);
     const { password } = await body<{ password?: string }>(req);
     if (!password || !(await checkPassword(env, password))) {
       await new Promise((r) => setTimeout(r, 800)); // slow down guessing
@@ -200,6 +201,8 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   if (path === "/api/session") {
     return json({
       ok: true,
+      auth: accessEnabled(env) ? "access" : "password",
+      user: accessEnabled(env) ? await accessUser(env, req) : null,
       ecomail: Boolean(env.ECOMAIL_API_KEY),
       ai: Boolean(env.ANTHROPIC_API_KEY),
       aiModel: MODEL,

@@ -130,6 +130,8 @@ function loadLocal() {
 
 /* ---------- auth ---------- */
 function showLogin() {
+  // With the e-mail code login (Cloudflare Access) a reload sends the user to the code screen
+  if (st.session?.auth === "access") return location.reload();
   $("#app").classList.add("hidden");
   $("#login").classList.remove("hidden");
   $("#password").focus();
@@ -148,6 +150,7 @@ $("#login-form").addEventListener("submit", async (e) => {
 });
 
 $("#logout").addEventListener("click", async () => {
+  if (st.session?.auth === "access") return (location.href = "/cdn-cgi/access/logout");
   await api("/api/logout", { method: "POST" }).catch(() => {});
   showLogin();
 });
@@ -1127,6 +1130,7 @@ async function start() {
   st.plan = await api("/api/plan");
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
+  if (st.session.user) $("#logout").title = `Přihlášen(a): ${st.session.user}`;
 
   renderStatus();
 
