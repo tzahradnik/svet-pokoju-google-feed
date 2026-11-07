@@ -54,7 +54,17 @@ interface GenerateRequest {
   feedback?: string;
 }
 
-async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateRequest) {
+/** One progress line sent to the browser while an e-mail is being generated. */
+export interface Progress {
+  type: "step" | "ai";
+  text?: string;
+  /** AI phase: characters written so far and the expected total */
+  chars?: number;
+  expected?: number;
+}
+type Report = (p: Progress) => void;
+
+async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateRequest, report: Report = () => {}) {
   const topic = r.kind === "topic" ? plan.topics.find((t) => t.id === r.id) : undefined;
   const special = r.kind === "special" ? plan.specials.find((t) => t.id === r.id) : undefined;
   if ((r.kind === "topic" || r.kind === "special") && !topic && !special) throw new HttpError(400, "Neznámé téma");
@@ -65,7 +75,11 @@ async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateReques
   const sources = r.sources?.length ? r.sources : defaults;
   if (!sources.length && !r.pinnedProducts?.length && !isNews) throw new HttpError(400, "Zadejte aspoň jednu kategorii nebo vyhledávání pro výběr produktů.");
   const productCount = Math.min(Math.max(r.productCount ?? 4, 1), 8);
+  report({ type: "step", text: `Téma: ${name}${r.previous ? " (úprava podle vaší poznámky)" : ""}.` });
   const site = await getSite(env, ctx).catch(() => null);
+  const label = (src: string) =>
+    src.startsWith("vyhledavani:") ? `vyhledávání „${src.slice(12)}“` : (site?.categories.find((c) => c.path === src)?.name ?? src);
+  if (sources.length) report({ type: "step", text: `Načítám aktuální produkty, ceny a dostupnost přímo z e-shopu: ${sources.map(label).join(", ")}.` });
 
   const pinned = r.pinnedProducts ?? [];
   let loaded = sources.length ? await loadCandidates(env, ctx, sources, r.id === "akce") : [];
@@ -78,12 +92,23 @@ async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateReques
     const news = pages.flatMap((x) => (x.status === "fulfilled" && x.value ? [x.value] : [])).map(({ images: _images, ...p }) => ({ ...p, flags: ["Novinka"] }));
     loaded = [...news, ...loaded.filter((p) => !news.some((n) => n.id === p.id))];
   }
+  if (isNews) report({ type: "step", text: "Přidávám novinky, které se na e-shopu objevily za posledních 30 dní (podle sitemapy)." });
   const candidates = [...pinned, ...loaded.filter((p) => !pinned.some((x) => x.id === p.id))].slice(0, MAX_CANDIDATES);
   if (!candidates.length) throw new HttpError(422, "Ve zvolených kategoriích se nenašly žádné produkty.");
 
+  const inStock = candidates.filter((p) => /skladem/i.test(p.availability)).length;
+  const sale = candidates.filter((p) => p.priceOriginal).length;
+  report({
+    type: "step",
+    text: `Mám ${candidates.length} kandidátů: ${inStock} skladem, ${sale} se slevou${pinned.length ? `, ${pinned.length} připnutých vámi` : ""}. AI z nich vybere ${Math.max(productCount, pinned.length)}.`,
+  });
+  if (topic?.keywords.length || topic?.questions.length)
+    report({ type: "step", text: `Podklady z analýzy vyhledávání: ${topic.keywords.length} frází, jak lidé téma hledají, a ${topic.questions.length} častých otázek pro tipy.` });
   const topicText = [name, ...(topic?.keywords ?? []), ...(topic?.questions ?? []), r.brief ?? ""].join(" ");
   const articles = site ? relatedArticles(site, topicText).map((a) => ({ name: a.name, url: env.SHOP_URL + a.path })) : [];
 
+  report({ type: "step", text: articles.length ? `Související články a průvodci pro odkazy: ${articles.map((a) => a.name).join(", ")}.` : "K tématu jsem nenašla související článek na blogu, e-mail bude bez odkazu na článek." });
+  report({ type: "step", text: "Píšu text hlasem Terezy podle příběhu a tónu značky (hlas-znacky.md)." });
   const copy = await generateCopy(env, {
     topicName: name,
     angle: topic?.angle ?? special?.angle ?? (r.kind === "category" ? `E-mail věnovaný nabídce „${name}“ na e-shopu.` : ""),
@@ -100,7 +125,8 @@ async function handleGenerate(env: Env, ctx: ExecutionContext, r: GenerateReques
     articles,
     previous: r.previous?.copy,
     feedback: r.feedback,
-  });
+  }, (chars, expected) => report({ type: "ai", chars, expected }));
+  report({ type: "step", text: "Kontroluji výsledek: produkty jen z nabídky, odkazy jen na existující články, bez dlouhých pomlček a znaku „&“." });
   if (!copy.hero_cta_url && sources[0] && !sources[0].startsWith("vyhledavani:")) copy.hero_cta_url = sourceUrl(env, sources[0]);
   const state: EmailState = { campaign: name, subject: copy.subject_variants[0] ?? name, copy, products: candidates, heroImage: r.previous?.heroImage ?? "" };
   return { state, candidates, articles };
@@ -162,7 +188,22 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
     if (q.length < 2) return json({ products: [] });
     return json({ products: (await loadSource(env, ctx, `vyhledavani:${q}`)).slice(0, 24) });
   }
-  if (path === "/api/generate" && req.method === "POST") return json(await handleGenerate(env, ctx, await body<GenerateRequest>(req)));
+  if (path === "/api/generate" && req.method === "POST") {
+    const input = await body<GenerateRequest>(req);
+    if (!(req.headers.get("Accept") ?? "").includes("ndjson")) return json(await handleGenerate(env, ctx, input));
+    // Streamed variant: one JSON object per line with progress, then {type:"done"} or {type:"error"}
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const writer = writable.getWriter();
+    const enc = new TextEncoder();
+    const send = (o: unknown) => writer.write(enc.encode(JSON.stringify(o) + "\n")).catch(() => {});
+    ctx.waitUntil(
+      handleGenerate(env, ctx, input, send)
+        .then((result) => send({ type: "done", result }))
+        .catch((e: unknown) => send({ type: "error", error: e instanceof Error ? e.message : String(e) }))
+        .finally(() => writer.close().catch(() => {})),
+    );
+    return new Response(readable, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
+  }
   if (path === "/api/render" && req.method === "POST") {
     const state = await body<EmailState>(req);
     return new Response(renderEmail(env, state), { headers: { "Content-Type": "text/html; charset=utf-8" } });

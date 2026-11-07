@@ -214,6 +214,15 @@
     <div id="changelog-body" class="dialog-body"><p class="hint">Načítám…</p></div>
   </dialog>
 
+  <div id="gen" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="gen-title">
+    <div class="gen-card">
+      <h2 id="gen-title">Píšu návrh e-mailu</h2>
+      <div class="gen-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="gen-fill"></span></div>
+      <p class="gen-eta"><span id="gen-pct">0 %</span><span id="gen-eta">odhad: asi 35 s</span></p>
+      <ul id="gen-steps" class="gen-steps" aria-live="polite"></ul>
+      <p id="gen-tip" class="gen-tip"></p>
+    </div>
+  </div>
   <div id="overlay" class="overlay hidden"><div class="spinner"></div><p id="overlay-text">Pracuji…</p></div>
   <div id="toast" class="toast hidden" role="status"></div>
   <script src="/app.js" type="module"></script>

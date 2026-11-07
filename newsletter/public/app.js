@@ -349,6 +349,140 @@ $("#pinned").addEventListener("click", (e) => {
   renderPinned();
 });
 
+/* ---------- generation progress ---------- */
+const GEN_TIMES_KEY = "nl-gen-times";
+// What the generator follows while the AI writes (mirrors src/ai.ts and src/hlas-znacky.md)
+const GEN_TIPS = [
+  "Píše Tereza v první osobě, vřele a konkrétně, podle příběhu ze stránky O nás.",
+  "Produkty vybírá jen z aktuální nabídky e-shopu, ceny a dostupnost bere přímo z webu.",
+  "Popisky produktů staví jen na názvu, ceně a dostupnosti, žádné vymyšlené vlastnosti.",
+  "Tipy odpovídají na otázky, které lidé opravdu hledají (analýza klíčových slov).",
+  "Odkazuje jen na existující články z blogu a Průvodce nákupem.",
+  "Bez dlouhých pomlček, bez znaku „&“ a bez reklamních frází typu „Objevte…“.",
+  "Nevymýšlí slevy, kódy, termíny doručení ani historky o rodině.",
+  "Předmět do 60 znaků ve třech variantách, preheader ho doplňuje a neopakuje.",
+];
+
+function genEstimate() {
+  try {
+    const t = JSON.parse(localStorage.getItem(GEN_TIMES_KEY) || "[]").filter((x) => x > 3000);
+    if (t.length) return [...t].sort((a, b) => a - b)[Math.floor(t.length / 2)];
+  } catch { /* storage unavailable */ }
+  return 35000;
+}
+function genRemember(ms) {
+  try {
+    const t = JSON.parse(localStorage.getItem(GEN_TIMES_KEY) || "[]");
+    localStorage.setItem(GEN_TIMES_KEY, JSON.stringify([...t, ms].slice(-6)));
+  } catch { /* storage unavailable */ }
+}
+const secs = (ms) => (ms >= 60000 ? `${Math.floor(ms / 60000)} min ${Math.round((ms % 60000) / 1000)} s` : `${Math.max(1, Math.round(ms / 1000))} s`);
+
+function startProgress(title) {
+  const est = genEstimate();
+  const t0 = Date.now();
+  const g = { pct: 0, aiStart: null, aiPct: 0, chars: 0, expected: 0, done: false };
+  $("#gen-title").textContent = title;
+  $("#gen-steps").innerHTML = "";
+  $("#gen").classList.remove("hidden");
+  let tip = Math.floor(Math.random() * GEN_TIPS.length);
+  const showTip = () => ($("#gen-tip").textContent = "Pravidlo: " + GEN_TIPS[tip++ % GEN_TIPS.length]);
+  showTip();
+  const tipTimer = setInterval(showTip, 5000);
+
+  const paint = () => {
+    const t = Date.now() - t0;
+    let pct;
+    let left;
+    if (g.done) {
+      pct = 100;
+      left = 0;
+    } else if (g.aiStart !== null && g.chars > 0) {
+      pct = g.aiPct + (95 - g.aiPct) * Math.min(g.chars / g.expected, 1);
+      const rate = g.chars / Math.max(Date.now() - g.aiStart, 1); // characters per ms
+      left = Math.max(g.expected - g.chars, 0) / rate + 1500;
+    } else {
+      pct = Math.min(60, (t / est) * 75);
+      left = est - t;
+    }
+    g.pct = Math.max(g.pct, pct);
+    $("#gen-fill").style.width = g.pct.toFixed(1) + "%";
+    $(".gen-bar").setAttribute("aria-valuenow", String(Math.round(g.pct)));
+    $("#gen-pct").textContent = Math.round(g.pct) + " %";
+    $("#gen-eta").textContent = g.done ? "hotovo" : left > 1500 ? `zbývá asi ${secs(left)} · uplynulo ${secs(t)}` : `ještě chvilku · uplynulo ${secs(t)}`;
+  };
+  const timer = setInterval(paint, 250);
+  paint();
+
+  const step = (text) => {
+    document.querySelectorAll("#gen-steps li.now").forEach((li) => li.classList.remove("now"));
+    $("#gen-steps").insertAdjacentHTML("beforeend", `<li class="now">${escapeHtml(text)}</li>`);
+    $("#gen-steps").lastElementChild.scrollIntoView({ block: "nearest" });
+  };
+  return {
+    event(ev) {
+      if (ev.type === "step") step(ev.text);
+      if (ev.type === "ai") {
+        if (g.aiStart === null) {
+          g.aiStart = Date.now();
+          g.aiPct = Math.max(g.pct, 20);
+        }
+        g.chars = ev.chars;
+        g.expected = Math.max(ev.expected, ev.chars + 200);
+        const li = $("#gen-steps li.now");
+        if (li) {
+          li.dataset.base = li.dataset.base || li.textContent;
+          li.textContent = `${li.dataset.base} Napsáno ${Math.min(99, Math.round((ev.chars / g.expected) * 100))} %.`;
+        }
+      }
+    },
+    finish(ok) {
+      g.done = ok;
+      paint();
+      document.querySelectorAll("#gen-steps li.now").forEach((li) => li.classList.remove("now"));
+      if (ok) genRemember(Date.now() - t0);
+      clearInterval(timer);
+      clearInterval(tipTimer);
+      setTimeout(() => $("#gen").classList.add("hidden"), ok ? 500 : 0);
+    },
+  };
+}
+
+/** POST /api/generate with streamed progress (one JSON object per line). */
+async function generateStream(req, prog) {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/x-ndjson" },
+    body: JSON.stringify(req),
+  });
+  if (res.status === 401) {
+    showLogin();
+    throw new Error("Přihlášení vypršelo");
+  }
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Chyba ${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (value) buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, i).trim();
+      buf = buf.slice(i + 1);
+      if (!line) continue;
+      const ev = JSON.parse(line);
+      if (ev.type === "done") return ev.result;
+      if (ev.type === "error") throw new Error(ev.error);
+      prog.event(ev);
+    }
+    if (done) throw new Error("Spojení se serverem se přerušilo, zkuste to prosím znovu.");
+  }
+}
+
 async function generate(withFeedback = false) {
   const req = {
     kind: st.kind,
@@ -366,20 +500,23 @@ async function generate(withFeedback = false) {
     req.previous = st.email;
     req.feedback = $("#feedback").value;
   }
-  busy(true, withFeedback ? "AI přepisuje e-mail podle poznámky…" : "Vybírám produkty a píšu návrh e-mailu…");
+  const prog = startProgress(withFeedback ? "Přepisuji e-mail podle poznámky" : "Píšu návrh e-mailu");
+  let ok = false;
   try {
-    const { state, candidates } = await api("/api/generate", { method: "POST", body: req });
+    const { state, candidates } = await generateStream(req, prog);
+    ok = true;
+    prog.finish(true);
     st.email = state;
     st.candidates = candidates;
     $("#feedback").value = "";
     fillEditor();
     await refreshPreview();
     $("#editor").scrollIntoView({ behavior: "smooth" });
-    toast("Návrh je hotový – můžete ho upravit.");
+    toast("Návrh je hotový, můžete ho upravit.");
   } catch (err) {
     toast(err.message, true);
   } finally {
-    busy(false);
+    if (!ok) prog.finish(false);
   }
 }
 $("#generate").addEventListener("click", () => generate(false));

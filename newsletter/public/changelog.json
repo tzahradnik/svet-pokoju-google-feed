@@ -3,6 +3,10 @@
     "date": "2026-11-07",
     "changes": [
       {
+        "type": "new",
+        "text": "Při generování se zobrazuje průběh: ukazatel, odhad zbývajícího času (zpřesňuje se podle předchozích generování) a co se právě děje: odkud se berou produkty, kolik jich je skladem a ve slevě, které články a podklady AI používá a jaká pravidla dodržuje."
+      },
+      {
         "type": "improve",
         "text": "Podpis Terezy s fotkou je v e-mailu zarovnaný na střed."
       },

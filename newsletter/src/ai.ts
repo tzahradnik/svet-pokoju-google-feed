@@ -119,10 +119,13 @@ function buildPrompt(i: GenerateInput): string {
   return parts.filter(Boolean).join("\n\n");
 }
 
-export async function generateCopy(env: Env, input: GenerateInput): Promise<EmailCopy> {
+/** Rough size of the JSON answer, used only for the progress bar. */
+const expectedChars = (i: GenerateInput) => 1800 + 330 * i.productCount;
+
+export async function generateCopy(env: Env, input: GenerateInput, onProgress?: (chars: number, expected: number) => void): Promise<EmailCopy> {
   if (!env.ANTHROPIC_API_KEY) throw new Error("Chybí ANTHROPIC_API_KEY – nastavte ho v Cloudflare (wrangler secret put).");
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const response = await client.beta.messages.create({
+  const stream = client.beta.messages.stream({
     model: MODEL,
     max_tokens: 16000,
     betas: ["server-side-fallback-2026-07-01"],
@@ -131,6 +134,17 @@ export async function generateCopy(env: Env, input: GenerateInput): Promise<Emai
     output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
     messages: [{ role: "user", content: buildPrompt(input) }],
   });
+  const expected = expectedChars(input);
+  let chars = 0;
+  let last = 0;
+  stream.on("text", (delta) => {
+    chars += delta.length;
+    if (onProgress && chars - last >= 120) {
+      last = chars;
+      onProgress(chars, expected);
+    }
+  });
+  const response = await stream.finalMessage();
   if (response.stop_reason === "refusal") throw new Error("AI odmítla zadání zpracovat – upravte zadání a zkuste to znovu.");
   if (response.stop_reason === "max_tokens") throw new Error("Odpověď AI byla příliš dlouhá – zkuste méně produktů.");
   const text = response.content.find((b) => b.type === "text");

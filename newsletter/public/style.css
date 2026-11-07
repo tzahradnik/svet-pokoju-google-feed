@@ -191,3 +191,16 @@ ul.lc li { margin: 0 0 6px; word-break: break-all; }
 .footlinks { display: flex; gap: 18px; flex-wrap: wrap; }
 ul.cov { columns: 2 220px; }
 ul.cov li { break-inside: avoid; }
+
+/* generation progress */
+.gen-card { width: min(560px, calc(100vw - 32px)); background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; box-shadow: 0 10px 40px rgba(0, 0, 0, .08); font-weight: normal; }
+.gen-card h2 { margin: 0 0 14px; font-size: 18px; }
+.gen-bar { height: 10px; background: #e6f6fd; border-radius: 99px; overflow: hidden; }
+.gen-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--teal)); border-radius: 99px; transition: width .4s ease; }
+.gen-eta { display: flex; justify-content: space-between; gap: 12px; margin: 6px 0 14px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gen-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 14px; max-height: 42vh; overflow: auto; }
+.gen-steps li { position: relative; padding-left: 24px; }
+.gen-steps li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--teal); font-weight: 700; }
+.gen-steps li.now::before { content: ""; top: 4px; width: 12px; height: 12px; border: 2px solid #cfeefb; border-top-color: var(--blue); border-radius: 50%; animation: spin .9s linear infinite; }
+.gen-tip { margin: 14px 0 0; padding: 10px 12px; background: #f4f8fb; border-radius: 8px; font-size: 13px; color: var(--muted); }
+.gen-tip:empty { display: none; }
