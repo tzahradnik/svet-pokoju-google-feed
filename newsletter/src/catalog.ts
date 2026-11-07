@@ -37,11 +37,13 @@ export async function catalogFile(env: Env, ctx: ExecutionContext, name: "site.j
     const url = env.CATALOG_URL.replace(/\/?$/, "/") + name;
     const cache = caches.default;
     const key = new Request(url);
+    const isJson = (r: Response) => r.ok && (r.headers.get("Content-Type") ?? "").includes("json");
     const hit = await cache.match(key);
-    if (hit) return hit;
+    if (hit && isJson(hit)) return hit;
     try {
-      const res = await fetch(url, { cf: { cacheTtl: CACHE_SECONDS } });
-      if (res.ok) {
+      // no cf.cacheTtl: it would cache GitHub's 404 page too
+      const res = await fetch(url);
+      if (isJson(res)) {
         const out = new Response(res.body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": `max-age=${CACHE_SECONDS}` } });
         ctx.waitUntil(cache.put(key, out.clone()));
         return out;

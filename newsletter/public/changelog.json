@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "fix",
+        "text": "Katalog e-shopu (kategorie, značky, hledání) se na ostré adrese načte spolehlivě i v době, kdy se jeho nová verze teprve připravuje."
+      },
+      {
+        "type": "fix",
         "text": "Odrážky v tipech se v e-mailu zobrazí jako seznam, i když jim předchází úvodní věta."
       },
       {
