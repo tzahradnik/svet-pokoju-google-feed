@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "improve",
+        "text": "Změny v nástroji už nejsou vypsané přímo v návodu. Najdete je pod odkazem „Změny v nástroji“ v patičce návodu."
+      },
+      {
+        "type": "improve",
         "text": "Návod má dvě verze: stručný návod v šesti krocích a podrobný návod se všemi funkcemi. Přepínač je nahoře, návod si pamatuje poslední volbu. V patičce návodu je nově informace o tom, jak a pro koho nástroj vznikl a k čemu slouží."
       },
       {

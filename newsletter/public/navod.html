@@ -45,6 +45,12 @@
   footer dt { font-weight: 700; color: var(--text); }
   footer dd { margin: 0; }
   footer .bottom { text-align: center; }
+  dialog#zmeny { width: min(640px, calc(100vw - 32px)); max-height: 80vh; border: 1px solid var(--line); border-radius: 12px; padding: 0; color: var(--text); text-align: left; }
+  dialog#zmeny::backdrop { background: rgba(20, 40, 55, .45); }
+  .dlg-head { position: sticky; top: 0; background: #fff; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+  .dlg-head h2 { margin: 0; font-size: 18px; }
+  .dlg-close { border: 1px solid var(--line); background: #fff; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; font-size: 15px; }
+  #cl { padding: 14px 20px 18px; font-size: 15px; }
   /* short / full switch */
   .switch { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 99px; padding: 4px; margin: 0 0 18px; gap: 4px; flex-wrap: wrap; }
   .switch button { border: 0; background: none; font: inherit; font-weight: 600; color: var(--muted); padding: 7px 16px; border-radius: 99px; cursor: pointer; }
@@ -103,7 +109,6 @@
       <li><a href="#odeslani">Odeslání v Ecomailu</a></li>
       <li><a href="#pravidla">Jak AI píše</a></li>
       <li><a href="#problemy">Když něco nejde</a></li>
-      <li><a href="#zmeny">Poslední změny</a></li>
     </ol>
   </div>
 
@@ -215,13 +220,7 @@
       <tr><td>Kontrola odkazů hlásí chybu</td><td>Opravte nebo smažte odkaz, který vede na neexistující stránku (třeba v bloku s tipem).</td></tr>
       <tr><td>Vložení do Ecomailu selže</td><td>Zkontrolujte odesílatele a vybraný seznam. Jinak stáhněte HTML a ozvěte se správci.</td></tr>
     </table>
-    <p>Novinky a opravy v nástroji najdete v patičce aplikace pod odkazem <span class="ui">Historie změn</span> a níže.</p>
-  </section>
-
-  <section class="card" id="zmeny">
-    <h2>Poslední změny v nástroji</h2>
-    <p style="color:var(--muted);font-size:14px;margin-top:-6px">Načítá se automaticky z historie změn aplikace.</p>
-    <div id="cl"><p>Načítám…</p></div>
+    <p>Novinky a opravy v nástroji najdete v patičce aplikace pod odkazem <span class="ui">Historie změn</span> nebo v patičce tohoto návodu pod odkazem <a href="#zmeny" data-open-changes>Změny v nástroji</a>.</p>
   </section>
 
   <footer>
@@ -234,7 +233,11 @@
         <dt>K čemu slouží</dt><dd>K rychlé přípravě newsletterů pro odběratele Světa pokojů: vybere aktuální produkty z e-shopu, napíše text podle pravidel značky a hotový návrh vloží do Ecomailu jako koncept. O odeslání vždy rozhoduje člověk.</dd>
       </dl>
     </div>
-    <p class="bottom">Newslettery Světpokojů.cz · <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a></p>
+    <p class="bottom">Newslettery Světpokojů.cz · <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a> · <a href="#zmeny" data-open-changes>Změny v nástroji</a></p>
+    <dialog id="zmeny" aria-labelledby="zmeny-title">
+      <div class="dlg-head"><h2 id="zmeny-title">Změny v nástroji</h2><button type="button" class="dlg-close" aria-label="Zavřít">✕</button></div>
+      <div id="cl"><p>Načítám…</p></div>
+    </dialog>
   </footer>
 </div>
 <script>
@@ -263,14 +266,26 @@
   const LABEL = { new: "Novinka", improve: "Vylepšení", fix: "Oprava" };
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" });
-  fetch("/changelog.json", { cache: "no-cache" })
+  const dlg = document.getElementById("zmeny");
+  let loaded = false;
+  const openChanges = (e) => {
+    if (e) e.preventDefault();
+    if (!dlg.open) dlg.showModal();
+    if (loaded) return;
+    loaded = true;
+    fetch("/changelog.json", { cache: "no-cache" })
     .then((r) => r.json())
     .then((days) => {
-      document.getElementById("cl").innerHTML = days.slice(0, 3).map((d) =>
+      document.getElementById("cl").innerHTML = days.map((d) =>
         `<div class="cl-day"><h3>${fmt(d.date)}</h3><ul>${d.changes.map((c) => `<li><span class="tag ${c.type}">${LABEL[c.type] || c.type}</span>${esc(c.text)}</li>`).join("")}</ul></div>`
       ).join("");
     })
-    .catch(() => { document.getElementById("cl").innerHTML = "<p>Historii změn se nepodařilo načíst.</p>"; });
+    .catch(() => { loaded = false; document.getElementById("cl").innerHTML = "<p>Historii změn se nepodařilo načíst.</p>"; });
+  };
+  document.querySelectorAll("[data-open-changes]").forEach((a) => a.addEventListener("click", openChanges));
+  dlg.querySelector(".dlg-close").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+  if (location.hash === "#zmeny") openChanges();
 </script>
 </body>
 </html>

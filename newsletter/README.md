@@ -61,8 +61,8 @@ The app shows it in the footer → "Historie změn".
 ## Návod pro tým (public/navod.html)
 Team guide at https://nl.svet-pokoju.workers.dev/navod (public, no password, `noindex`; never put the password in it).
 Every change that alters what users see or do **must** also update `public/navod.html` in the same commit
-(texts, buttons, steps, warnings) and bump the date in `#doc-updated`. Its "Poslední změny" section loads
-`changelog.json` automatically. Linked from the app footer ("Návod") and the login screen.
+(texts, buttons, steps, warnings) and bump the date in `#doc-updated`. The footer link "Změny v nástroji" opens a dialog that loads
+`changelog.json` automatically. The guide has a short and a full version (`?verze=strucny|plny`); keep both in sync. Linked from the app footer ("Návod") and the login screen.
 
 ## Hlas značky
 
