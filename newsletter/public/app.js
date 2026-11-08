@@ -783,7 +783,8 @@ const HOOK_LAYOUT = [
   ["sign", "Podpis Terezy"],
 ];
 const ex = {
-  box: (inner, bg = "#f6f1fb", border = "#b9a2d6") => `<div style="background:${bg};border-left:4px solid ${border};border-radius:8px;padding:10px 12px">${inner}</div>`,
+  // mirrors the e-mail blocks: warm background + pastel logo-colour spine
+  box: (inner) => `<div style="display:flex;border-radius:8px;overflow:hidden"><div style="flex:none;width:4px;background:linear-gradient(#9fd9d3 0 25%,#f8e3a4 25% 50%,#fad3a0 50% 75%,#f2aaa5 75%)"></div><div style="flex:1;background:#fbf8f3;padding:10px 12px">${inner}</div></div>`,
   label: (t) => `<div style="font-size:11px;font-weight:700;color:#5b6b76;margin-bottom:4px">${t}</div>`,
 };
 const HOOKS = {

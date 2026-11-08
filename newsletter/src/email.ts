@@ -167,8 +167,9 @@ function hookTop(h: Hook | undefined, text: string): string {
 }
 
 function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string {
-  const box = (inner: string, bg = "#f6f1fb", border = "#b9a2d6") =>
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:${bg};border-radius:10px;border-left:4px solid ${border}"><tr><td style="padding:16px 18px;font-family:${FONT}">${inner}</td></tr></table>`;
+  // same look as the content blocks: warm background + pastel logo-colour spine
+  const box = (inner: string, ..._legacy: string[]) =>
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate"><tr>${spine(false)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};border-radius:0 10px 10px 0;padding:18px 22px;font-family:${FONT}">${inner}</td></tr></table>`;
   const label = (t: string) => `<div style="font-size:13px;font-weight:bold;color:${C.muted};margin:0 0 6px">${t}</div>`;
   switch (h?.type) {
     case "personal": {

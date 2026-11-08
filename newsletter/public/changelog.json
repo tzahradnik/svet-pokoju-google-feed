@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "improve",
+        "text": "Rámečky úvodních háčků (otázka zákazníka, recenze, mini pohádka) mají stejný vzhled jako obsahové bloky: teplé pozadí a pastelový proužek z barev loga."
+      },
+      {
+        "type": "improve",
         "text": "Nový vzhled obsahových bloků (tipů) v e-mailu: teplé světlé pozadí a svislý proužek v pastelových barvách loga místo modrého rámečku."
       },
       {
