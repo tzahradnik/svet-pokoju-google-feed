@@ -36,6 +36,16 @@ export function plain(s: string): string {
   return s.replace(BOLD, "$1").replace(ITALIC, "$1");
 }
 
+// Content blocks: warm light background with a thin vertical "book spine" in the pastel logo colours.
+// Clients without CSS gradients (Outlook) show the first colour as a solid spine.
+const BLOCK_BG = "#fbf8f3";
+const SPINE = ["#9fd9d3", "#f8e3a4", "#fad3a0", "#f2aaa5"];
+function spine(reverse: boolean): string {
+  const c = reverse ? [...SPINE].reverse() : SPINE;
+  const grad = `linear-gradient(to bottom,${c[0]} 0,${c[0]} 25%,${c[1]} 25%,${c[1]} 50%,${c[2]} 50%,${c[2]} 75%,${c[3]} 75%,${c[3]} 100%)`;
+  return `<td width="4" bgcolor="${c[0]}" style="width:4px;background:${c[0]};background-image:${grad};border-radius:10px 0 0 10px;font-size:0;line-height:0">&nbsp;</td>`;
+}
+
 /** Plain text → paragraphs; a block of lines starting with "- " becomes a bulleted list. */
 function paragraphs(text: string, style: string): string {
   return text
@@ -224,8 +234,8 @@ export function renderEmail(env: Env, s: EmailState, opts: { preview?: boolean }
   const sections = copy.sections
     .filter((x) => x.title || x.text)
     .map(
-      (x) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef9fe;border-left:4px solid ${C.blue};border-radius:6px"><tr><td style="padding:16px 18px">
+      (x, i) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr>${spine(i % 2 === 1)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};border-radius:0 10px 10px 0;padding:18px 22px">
 <h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(plain(x.title))}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}${
         x.link_url
           ? `<p style="margin:0"><a class="lnk" href="${esc(track(x.link_url, campaign, "clanek"))}" style="color:${C.link};font-size:15px;font-weight:bold">${esc(x.link_text || "Přečtěte si víc")} →</a></p>`

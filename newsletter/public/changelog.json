@@ -3,6 +3,10 @@
     "date": "2026-11-08",
     "changes": [
       {
+        "type": "improve",
+        "text": "Nový vzhled obsahových bloků (tipů) v e-mailu: teplé světlé pozadí a svislý proužek v pastelových barvách loga místo modrého rámečku."
+      },
+      {
         "type": "new",
         "text": "Tučné písmo a kurzíva: v editoru jsou nad texty tlačítka B a I (nebo ⌘B / ⌘I). AI teď sama zvýrazní to nejdůležitější, třeba slevu, kód nebo hlavní radu."
       },
