@@ -3,6 +3,10 @@
     "date": "2026-11-08",
     "changes": [
       {
+        "type": "new",
+        "text": "Přehled „Kdo má přístup“ v patičce: seznam e-mailů, které se smějí přihlásit, a kdy se kdo naposledy přihlásil. Načítá se přímo z nastavení přihlášení, takže je vždy aktuální."
+      },
+      {
         "type": "improve",
         "text": "Rámečky úvodních háčků (otázka zákazníka, recenze, mini pohádka) mají stejný vzhled jako obsahové bloky: teplé pozadí a pastelový proužek z barev loga."
       },

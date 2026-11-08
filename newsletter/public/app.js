@@ -1151,6 +1151,37 @@ $("#changelog-open").addEventListener("click", async () => {
 $("#changelog-close").addEventListener("click", () => $("#changelog").close());
 $("#changelog").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
+/* ---------- who has access ---------- */
+// Read live from the Cloudflare Access policy; changing it is done in Cloudflare (see README).
+$("#team-open").addEventListener("click", async () => {
+  $("#team").showModal();
+  $("#team-body").innerHTML = `<p class="hint">Načítám…</p>`;
+  try {
+    const t = await api("/api/team");
+    if (!t.configured) {
+      $("#team-body").innerHTML = `<p class="error">Přehled zatím není napojený na Cloudflare. Ozvěte se správci nástroje.</p>`;
+      return;
+    }
+    if (t.error) {
+      $("#team-body").innerHTML = `<p class="error">Seznam se nepodařilo načíst z Cloudflaru (${escapeHtml(t.error)}).</p>`;
+      return;
+    }
+    const fmt = (d) => (d ? new Date(d).toLocaleString("cs-CZ", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "zatím nepřihlášen(a)");
+    const me = (st.session?.user || "").toLowerCase();
+    const rows = t.members
+      .map((m) => `<tr><td>${escapeHtml(m.email)}${m.email.toLowerCase() === me ? ' <span class="cl-tag improve">vy</span>' : ""}</td><td>${escapeHtml(fmt(m.lastLogin))}</td></tr>`)
+      .join("");
+    const doms = t.domains.length ? `<p>A každý s e-mailem na doméně ${t.domains.map((d) => `<code>@${escapeHtml(d)}</code>`).join(", ")}.</p>` : "";
+    $("#team-body").innerHTML = `<p class="hint">Do nástroje se může přihlásit jen tento seznam (${t.members.length}). Načítá se přímo z nastavení přihlášení v Cloudflaru, takže je vždy aktuální.</p>
+<table class="team-table"><thead><tr><th>E-mail</th><th>Poslední přihlášení</th></tr></thead><tbody>${rows}</tbody></table>${doms}
+<p class="hint">Přidat nebo odebrat člověka může správce nástroje.</p>`;
+  } catch (e) {
+    $("#team-body").innerHTML = `<p class="error">${escapeHtml(e.message)}</p>`;
+  }
+});
+$("#team-close").addEventListener("click", () => $("#team").close());
+$("#team").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
 /* ---------- plan coverage ---------- */
 $("#coverage-open").addEventListener("click", () => {
   $("#coverage").showModal();

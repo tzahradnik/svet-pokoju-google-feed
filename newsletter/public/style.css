@@ -235,3 +235,9 @@ label.check input { width: auto; margin: 3px 0 0; flex: none; }
 .fmt { display: inline-grid; place-items: center; min-width: 30px; height: 28px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); font: 15px/1 Georgia, serif; cursor: pointer; user-select: none; }
 .fmt:hover, .fmt:focus-visible { border-color: var(--blue); color: var(--blue-dark); outline: none; }
 .fmt-hint { color: var(--muted); font-size: 12px; margin-left: 6px; }
+
+/* who has access */
+.team-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+.team-table th, .team-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.team-table th { font-size: 13px; color: var(--muted); font-weight: 600; }
+.team-table td:first-child { word-break: break-all; }

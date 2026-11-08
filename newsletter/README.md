@@ -55,6 +55,10 @@ Account info@svet-pokoju.cz → Zero Trust (Free plan, team `royal-limit-1491`).
 - App **Newslettery: veřejné stránky** with policy **Veřejné stránky** (Bypass, Everyone) for `/navod`, `/img/*`
   (Tereza's photo loads inside sent e-mails) and `/changelog.json`.
 - **Add or remove a person:** Zero Trust → Access controls → Policies → Tým newsletterů → Emails.
+- **Who has access (footer → "Kdo má přístup"):** `/api/team` reads that policy (and last sign-in from Zero Trust users)
+  via the Cloudflare API. Needs the secret `CF_API_TOKEN`: an account API token with **read-only** permissions
+  `Access: Apps and Policies – Read` (+ `Access: Users – Read` for last sign-in), limited to account info@svet-pokoju.cz.
+  `npx wrangler secret put CF_API_TOKEN`. The e-mails are never stored in the repo (it is public).
 - `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` in `wrangler.jsonc` make the Worker verify the Access JWT on every `/api/*`
   call and turn the password login off. `APP_PASSWORD` / `SESSION_SECRET` are only a fallback for local dev.
 

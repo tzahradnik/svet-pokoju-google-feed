@@ -4,6 +4,10 @@ export interface Env {
   /** Cloudflare Access: team domain (xyz.cloudflareaccess.com) and application AUD tag. When both are set, login is by one-time e-mail code only. */
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** "Kdo má přístup": account + policy id of "Tým newsletterů" and a READ-ONLY API token (secret). */
+  ACCESS_ACCOUNT_ID?: string;
+  ACCESS_POLICY_ID?: string;
+  CF_API_TOKEN?: string;
   SESSION_SECRET: string;
   ANTHROPIC_API_KEY: string;
   ECOMAIL_API_KEY?: string;

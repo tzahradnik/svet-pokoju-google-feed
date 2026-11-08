@@ -31,6 +31,9 @@
     // the Access policy "Tým newsletterů"; /navod, /img/* and /changelog.json are public (app "Newslettery: veřejné stránky").
     // With both set, the password login is off and the Worker verifies the Access JWT on every /api/* call.
     "ACCESS_TEAM_DOMAIN": "royal-limit-1491.cloudflareaccess.com",
-    "ACCESS_AUD": "b2e93a1fd51e1fd20b748b3d69fa167d31b32d0c5701f41126da9c2d0b4855f6"
+    "ACCESS_AUD": "b2e93a1fd51e1fd20b748b3d69fa167d31b32d0c5701f41126da9c2d0b4855f6",
+    // "Kdo má přístup" in the footer reads the policy "Tým newsletterů" with the read-only secret CF_API_TOKEN
+    "ACCESS_ACCOUNT_ID": "4b0bd0ef2073f0165fda531a026dd608",
+    "ACCESS_POLICY_ID": "4dbb5816-3e53-4ed2-9466-2576b2c55974"
   }
 }

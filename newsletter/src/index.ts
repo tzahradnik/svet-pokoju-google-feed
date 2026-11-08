@@ -2,6 +2,7 @@ import { generateCopy, MODEL } from "./ai";
 import { accessEnabled, accessUser, checkPassword, clearCookie, isAuthenticated, sessionCookie } from "./auth";
 import { createDraft, listLists } from "./ecomail";
 import { renderEmail, plain } from "./email";
+import { getTeam } from "./team";
 import planJson from "./plan.json";
 import { catalogFile, getSite, relatedArticles } from "./catalog";
 import { checkLinks, extractLinks } from "./links";
@@ -214,6 +215,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
     });
   }
   if (path === "/api/plan") return json(plan);
+  if (path === "/api/team") return json(await getTeam(env));
   if (path === "/api/site") return json(await getSite(env, ctx));
   if (path === "/api/catalog/products") {
     const res = await catalogFile(env, ctx, "products.json");
