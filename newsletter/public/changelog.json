@@ -3,6 +3,14 @@
     "date": "2026-11-08",
     "changes": [
       {
+        "type": "fix",
+        "text": "U zlevněných produktů je mezera mezi akční a původní cenou."
+      },
+      {
+        "type": "improve",
+        "text": "Barvy v e-mailu odpovídají webu Světa pokojů: tlačítko „Zobrazit produkt“, odkazy a výběr podle věku jsou v tyrkysové značky místo modré, akční cena a štítek Sleva mají červenou z e-shopu."
+      },
+      {
         "type": "improve",
         "text": "Návod používá stejný vzhled bloků jako e-mail (teplé pozadí a pastelový proužek z barev loga) a v kroku 2 ukazuje, jak blok v e-mailu vypadá."
       },

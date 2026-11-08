@@ -1,13 +1,15 @@
 import type { EmailState, Env, Hook, Product } from "./types";
 
 const C = {
-  // Brand colours, darkened where white text sits on them so every pair passes WCAG AA (≥ 4.5:1)
-  blue: "#14b1ef",
-  blueDark: "#0b75a8",
+  // Brand colours of svet-pokoju.cz (Shoptet template: primary #12a89d, secondary #e52648 / sale #e31e53,
+  // tertiary #fdaf40). Teal is darkened to #0b7d74 wherever text sits on it or it is text, so every pair
+  // passes WCAG AA (≥ 4.5:1); the exact #12a89d is used only for borders.
+  blue: "#12a89d", // brand teal (borders, accents)
+  blueDark: "#0b7d74", // teal for buttons with white text and hover
   teal: "#0b7d74",
   orange: "#fdaf40",
-  red: "#c8102e",
-  link: "#09608a",
+  red: "#e31e53", // sale price and badge, as on the web (4.6:1 with white)
+  link: "#0b7d74",
   text: "#2b2b2b",
   muted: "#6b6b6b",
   bg: "#f3f6f8",
@@ -102,7 +104,7 @@ function button(text: string, href: string, color = C.orange, textColor = C.text
 function productCard(p: Product, blurb: string, badge: string, campaign: string): string {
   const href = track(p.url, campaign, `produkt-${p.id}`);
   const price = p.priceOriginal
-    ? `<span style="color:${C.red};font-weight:bold;font-size:18px">${fmt(p.price)}</span> <span style="color:${C.muted};text-decoration:line-through;font-size:13px">${fmt(p.priceOriginal)}</span>`
+    ? `<span style="color:${C.red};font-weight:bold;font-size:18px">${fmt(p.price)}</span> <span style="color:${C.muted};text-decoration:line-through;font-size:13px;margin-left:8px;white-space:nowrap">${fmt(p.priceOriginal)}</span>`
     : `<span style="color:${C.text};font-weight:bold;font-size:18px">${fmt(p.price)}</span>`;
   const badgeHtml = badge
     ? `<span style="display:inline-block;background:${p.discountPct ? C.red : C.teal};color:#fff;font-size:13px;font-weight:bold;padding:3px 8px;border-radius:4px;margin-bottom:8px">${esc(badge)}</span><br>`
