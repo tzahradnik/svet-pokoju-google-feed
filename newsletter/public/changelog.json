@@ -4,6 +4,10 @@
     "changes": [
       {
         "type": "improve",
+        "text": "Bloky v e-mailu i v návodu mají ostré hrany podle vizuální identity. V návodu barva říká, o co jde: červená chyba, oranžová varování, zelená tip."
+      },
+      {
+        "type": "improve",
         "text": "Návod používá stejný vzhled bloků jako e-mail (teplé pozadí a pastelový proužek z barev loga) a v kroku 2 ukazuje, jak blok v e-mailu vypadá."
       },
       {
