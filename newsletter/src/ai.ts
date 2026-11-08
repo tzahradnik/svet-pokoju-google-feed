@@ -18,7 +18,8 @@ Zadání úkolu:
 - Sekce (sections): 0 až 2 krátké bloky s praktickou radou, ideálně odpověď na konkrétní častou otázku z analýzy. Titulek je otázka nebo „Tip od Terezy“, text začíná přímou odpovědí. Konkrétní čísla jen obecně platná a ověřitelná. Každá nanejvýš 3 věty, nebo výčet 2 až 4 bodů (každý bod na vlastním řádku začínajícím „- “).
 - Když dostaneš články z blogu nebo průvodce a některý přímo souvisí s blokem, vyplň link_url (přesně jedna z dodaných URL) a link_text (krátká výzva, např. „Přečtěte si celý návod“). Jinak nech obě pole prázdná a žádné jiné odkazy si nevymýšlej.
 - Závěr (closing): 1 až 2 věty, osobní nabídka pomoci (napsat nebo zavolat, poradit s výběrem, úprava na míru). Bez rozloučení a podpisu, ty doplní šablona.
-- Text v polích je prostý text. Nový odstavec odděl prázdným řádkem.`;
+- Text v polích je prostý text. Nový odstavec odděl prázdným řádkem.
+- Zvýraznění: v úvodu, sekcích, popiscích produktů a závěru označ to nejdůležitější, co má čtenář zachytit i při rychlém přelétnutí očima. **Tučně** (dvě hvězdičky z obou stran) dej klíčovou informaci: slevu a kód, termín, hlavní radu nebo odpověď, cenu. *Kurzívou* (jedna hvězdička) jen jemný důraz nebo citát. Zvýrazni 1 až 3 krátká místa na blok, vždy jen pár slov, nikdy celou větu ani nadpis. V předmětu, preheaderu, nadpisu, titulcích sekcí a textech tlačítek nezvýrazňuj nic.`;
 
 const SYSTEM = `${TASK}\n\n${VOICE}`;
 

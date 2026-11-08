@@ -124,12 +124,12 @@
             <span class="label">Úvodní háček</span>
             <div class="row hook-row"><select id="hke-type" aria-label="Úvodní háček"></select><span class="hook-info"><button type="button" class="info-btn" aria-label="Ukázka a umístění v e-mailu" aria-expanded="false" aria-controls="hke-pop">i</button><div class="hook-pop" id="hke-pop" role="tooltip"></div></span></div>
             <div id="hke-fields" class="hook-fields"></div>
-            <label id="hke-text-wrap">Text háčku <small>(napsala AI)</small><textarea id="hke-text" rows="3"></textarea></label>
+            <label id="hke-text-wrap">Text háčku <small>(napsala AI)</small><textarea id="hke-text" class="rich" rows="3"></textarea></label>
             <label class="check"><input type="checkbox" id="hke-greet"><span>Oslovit čtenáře jménem <small>(v náhledu je ukázkové jméno, v Ecomailu se doplní skutečné)</small></span></label>
           </div>
           <label>Úvodní obrázek <small>(nepovinné – URL, nebo tlačítko „Fotky“ u produktu níže)</small><input id="hero-image" placeholder="https://…"></label>
           <label>Nadpis<input id="headline"></label>
-          <label>Úvod<textarea id="intro" rows="5"></textarea></label>
+          <label>Úvod<textarea id="intro" class="rich" rows="5"></textarea></label>
           <div class="grid2">
             <label>Text hlavního tlačítka<input id="hero-cta-text"></label>
             <label>Odkaz hlavního tlačítka<input id="hero-cta-url"></label>
@@ -150,7 +150,7 @@
             </details>
           </div>
 
-          <label>Závěr<textarea id="closing" rows="3"></textarea></label>
+          <label>Závěr<textarea id="closing" class="rich" rows="3"></textarea></label>
           <label>Text závěrečného tlačítka<input id="cta-text"></label>
 
           <div class="regen">

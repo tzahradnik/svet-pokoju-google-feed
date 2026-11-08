@@ -21,6 +21,21 @@ export function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// Light inline formatting typed in the editor: **bold** and *italic*. The guards keep Ecomail merge tags
+// (*|VOKATIV|*, *|IF:…|*) untouched: a marker never touches "|" and never sits next to a space on the inside.
+const BOLD = /\*\*(?=\S)((?:[^*\n]|\*(?!\*))+?)(?<=\S)\*\*/g;
+const ITALIC = /(?<![|*\w])\*(?=[^\s*|])([^*\n]+?)(?<=[^\s*|])\*(?![|*\w])/g;
+
+/** Escaped text with **bold** → <strong>, *italic* → <em>. */
+export function inline(s: string): string {
+  return esc(s).replace(BOLD, "<strong>$1</strong>").replace(ITALIC, "<em>$1</em>");
+}
+
+/** Text with the formatting markers removed (subject, preheader, headings, buttons). */
+export function plain(s: string): string {
+  return s.replace(BOLD, "$1").replace(ITALIC, "$1");
+}
+
 /** Plain text → paragraphs; a block of lines starting with "- " becomes a bulleted list. */
 function paragraphs(text: string, style: string): string {
   return text
@@ -40,8 +55,8 @@ function paragraphs(text: string, style: string): string {
       return runs
         .map((r) =>
           r.list
-            ? `<ul style="margin:0 0 14px;padding-left:20px;${style}">${r.lines.map((l) => `<li style="margin:0 0 6px">${esc(l.replace(/^[-–•]\s+/, ""))}</li>`).join("")}</ul>`
-            : `<p style="margin:0 0 14px;${style}">${r.lines.map(esc).join("<br>")}</p>`,
+            ? `<ul style="margin:0 0 14px;padding-left:20px;${style}">${r.lines.map((l) => `<li style="margin:0 0 6px">${inline(l.replace(/^[-–•]\s+/, ""))}</li>`).join("")}</ul>`
+            : `<p style="margin:0 0 14px;${style}">${r.lines.map(inline).join("<br>")}</p>`,
         )
         .join("");
     })
@@ -70,7 +85,7 @@ const fmt = (n: number) => `${n.toLocaleString("cs-CZ").replace(/ /g, " ")} K�
 
 function button(text: string, href: string, color = C.orange, textColor = C.text): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr><td style="border-radius:6px;background:${color}">
-<a class="btn" href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-family:${FONT};font-size:16px;font-weight:bold;color:${textColor};text-decoration:none;border-radius:6px">${esc(text)}</a>
+<a class="btn" href="${esc(href)}" style="display:inline-block;padding:13px 26px;font-family:${FONT};font-size:16px;font-weight:bold;color:${textColor};text-decoration:none;border-radius:6px">${esc(plain(text))}</a>
 </td></tr></table>`;
 }
 
@@ -87,7 +102,7 @@ function productCard(p: Product, blurb: string, badge: string, campaign: string)
 <tr><td style="padding:12px 12px 0" align="center"><a class="img" href="${esc(href)}"><img src="${esc(p.image)}" width="238" alt="${esc(p.name)}" style="display:block;width:100%;max-width:238px;height:auto;border:0;border-radius:6px"></a></td></tr>
 <tr><td style="padding:12px 14px 16px;font-family:${FONT};text-align:left">
 ${badgeHtml}<a class="lnk" href="${esc(href)}" style="color:${C.text};text-decoration:none;font-size:15px;font-weight:bold;line-height:1.35">${esc(p.name)}</a>
-<p style="margin:8px 0 10px;color:${C.muted};font-size:14px;line-height:1.5">${esc(blurb)}</p>
+<p style="margin:8px 0 10px;color:${C.muted};font-size:14px;line-height:1.5">${inline(blurb)}</p>
 <p style="margin:0 0 12px">${price}</p>
 <a class="btn" href="${esc(href)}" style="display:inline-block;padding:9px 16px;background:${C.blueDark};color:#fff;font-size:14px;font-weight:bold;text-decoration:none;border-radius:5px">Zobrazit produkt</a>
 </td></tr></table></div>`;
@@ -138,7 +153,7 @@ const stars = (n: number) => "★".repeat(n) + "☆".repeat(5 - n);
 function hookTop(h: Hook | undefined, text: string): string {
   if (h?.type !== "deadline") return "";
   return `<tr><td class="px" style="background:#fff3dc;padding:14px 32px;font-family:${FONT};text-align:center;color:#6b4200">
-<div style="font-size:16px;font-weight:bold;line-height:1.4">⏰ ${esc(h.deadlineWhat ?? "")}: ${esc(h.deadline ?? "")}</div>${text ? `<div style="font-size:14px;line-height:1.5;margin-top:4px">${esc(text)}</div>` : ""}</td></tr>`;
+<div style="font-size:16px;font-weight:bold;line-height:1.4">⏰ ${esc(h.deadlineWhat ?? "")}: ${esc(h.deadline ?? "")}</div>${text ? `<div style="font-size:14px;line-height:1.5;margin-top:4px">${inline(text)}</div>` : ""}</td></tr>`;
 }
 
 function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string {
@@ -158,7 +173,7 @@ function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string 
       return box(
         `${label("Otázka, kterou jsem dostala")}<div style="font-size:18px;line-height:1.45;font-style:italic;color:${C.text}">„${esc(h.question ?? "")}“</div>${
           h.asker ? `<div style="font-size:14px;color:${C.muted};margin-top:6px">píše ${esc(h.asker)}</div>` : ""
-        }${text ? `<div style="font-size:15px;color:${C.text};margin-top:10px">${esc(text)}</div>` : ""}`,
+        }${text ? `<div style="font-size:15px;color:${C.text};margin-top:10px">${inline(text)}</div>` : ""}`,
         "#eef9fe",
         C.blue,
       );
@@ -171,7 +186,7 @@ function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string 
         "#e0a100",
       );
     case "story":
-      return text ? box(`${label("🌙 Malá pohádka na úvod")}<div style="font-size:16px;line-height:1.6;font-style:italic;color:${C.text}">${esc(text)}</div>`) : "";
+      return text ? box(`${label("🌙 Malá pohádka na úvod")}<div style="font-size:16px;line-height:1.6;font-style:italic;color:${C.text}">${inline(text)}</div>`) : "";
     default:
       return "";
   }
@@ -211,7 +226,7 @@ export function renderEmail(env: Env, s: EmailState, opts: { preview?: boolean }
     .map(
       (x) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef9fe;border-left:4px solid ${C.blue};border-radius:6px"><tr><td style="padding:16px 18px">
-<h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(x.title)}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}${
+<h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(plain(x.title))}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}${
         x.link_url
           ? `<p style="margin:0"><a class="lnk" href="${esc(track(x.link_url, campaign, "clanek"))}" style="color:${C.link};font-size:15px;font-weight:bold">${esc(x.link_text || "Přečtěte si víc")} →</a></p>`
           : ""
@@ -221,11 +236,11 @@ export function renderEmail(env: Env, s: EmailState, opts: { preview?: boolean }
     .join("");
 
   return `<!DOCTYPE html>
-<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(s.subject || copy.headline)}</title>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(plain(s.subject || copy.headline))}</title>
 <style>.btn:hover{opacity:.85;text-decoration:underline!important}.lnk:hover,.flk:hover{text-decoration:underline!important;color:${C.blueDark}!important}.img:hover img{opacity:.9}
 @media (max-width:620px){.col{max-width:100%!important;margin:0 0 16px!important}.px{padding-left:18px!important;padding-right:18px!important}}</style></head>
 <body style="margin:0;padding:0;background:${C.bg}">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${C.bg}">${esc(copy.preheader)}${"&#8203;&nbsp;".repeat(40)}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:${C.bg}">${esc(plain(copy.preheader))}${"&#8203;&nbsp;".repeat(40)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.bg}"><tr><td align="center" style="padding:16px 8px">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px">
 <tr><td style="padding:0 8px 10px;font-family:${FONT};font-size:13px;color:${C.muted};text-align:right"><a class="flk" href="*|WEBVERSION|*" style="color:${C.link}">Zobrazit e-mail v prohlížeči</a></td></tr>
@@ -236,7 +251,7 @@ ${hookTop(s.hook, hookText)}
 ${hero}
 <tr><td class="px" style="padding:28px 32px 6px;font-family:${FONT}">
 ${hookAboveHeadline(env, s.hook, hookText)}
-<h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:${C.text}">${esc(copy.headline)}</h1>
+<h1 style="margin:0 0 16px;font-size:26px;line-height:1.25;color:${C.text}">${esc(plain(copy.headline))}</h1>
 ${paragraphs(intro, `font-size:16px;line-height:1.6;color:${C.text}`)}
 </td></tr>
 ${hookAfterIntro(s.hook, campaign)}

@@ -89,7 +89,7 @@
       <li><strong class="t">Přihlaste se</strong>Otevřete <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a> zadejte svůj e-mail a klikněte na <span class="ui">Send login code</span>. Kód, který vám přijde e-mailem, opište do stránky. Pustí vás jen e-mail, který správce povolil.</li>
       <li><strong class="t">Vyberte téma</strong>Nejjednodušší je záložka <span class="ui">Téma z plánu</span>. Sleva, kód nebo termín patří do pole <span class="ui">Doplňující zadání</span>, AI si je sama nevymyslí.</li>
       <li><strong class="t">Nechte e-mail vygenerovat</strong>Klikněte na <span class="ui">Vygenerovat návrh e-mailu</span> a počkejte 20 až 60 sekund.</li>
-      <li><strong class="t">Přečtěte a upravte</strong>Vpravo je náhled, vlevo všechno upravíte. Zkontrolujte hlavně ceny, rozměry a tvrzení o produktech. Když se vám text nelíbí, napište poznámku a klikněte na <span class="ui">Přegenerovat s poznámkou</span>.</li>
+      <li><strong class="t">Přečtěte a upravte</strong>Vpravo je náhled, vlevo všechno upravíte, včetně tučného písma a kurzívy. Zkontrolujte hlavně ceny, rozměry a tvrzení o produktech. Když se vám text nelíbí, napište poznámku a klikněte na <span class="ui">Přegenerovat s poznámkou</span>.</li>
       <li><strong class="t">Vložte do Ecomailu</strong>V kroku 3 klikněte na <span class="ui">Zkontrolovat odkazy</span> a pak na <span class="ui">Schválit a vložit jako draft do Ecomailu</span>.</li>
       <li><strong class="t">Odešlete v Ecomailu</strong>Najděte koncept v Kampaních, pošlete si testovací e-mail a jako příjemce vyberte jen kontakty se souhlasem (segment se štítkem <code>shpt_newsletters</code>).</li>
     </ol>
@@ -117,7 +117,7 @@
     <p><a class="cta" href="https://nl.svet-pokoju.workers.dev/">Otevřít nástroj</a></p>
     <ul>
       <li>Adresa: <a href="https://nl.svet-pokoju.workers.dev/">nl.svet-pokoju.workers.dev</a>. Funguje v jakémkoli prohlížeči, nejlépe na počítači.</li>
-      <li>Přihlašuje se <strong>jednorázovým kódem na e-mail</strong>, žádné heslo není. Zadejte svůj e-mail, klikněte na <span class="ui">Send login code</span> a kód z e-mailu (přijde od Cloudflare) opište do stránky. Přihlašovací stránku s logem Světa pokojů zajišťuje služba Cloudflare, která nástroj chrání, proto jsou některá tlačítka anglicky.</li>
+      <li>Přihlašuje se <strong>jednorázovým kódem na e-mail</strong>, žádné heslo není. Zadejte svůj e-mail, klikněte na <span class="ui">Send login code</span> a kód z e-mailu (přijde od Cloudflare) opište do stránky. Přihlašovací stránku s logem Světa pokojů zajišťuje služba Cloudflare, která nástroj chrání. Pokyny jsou česky, jen tlačítka a popisky od Cloudflaru zůstávají anglicky: <span class="ui">Email</span> je pole pro e-mail, <span class="ui">Send login code</span> pošle kód.</li>
       <li>Pustí vás jen e-mail, který správce nástroje povolil. Kód přijde jen na povolený e-mail. Když nepřijde, zkontrolujte spam a ozvěte se správci, ať vás přidá.</li>
       <li>Přihlášení vydrží 24 hodin, pak si necháte poslat nový kód. Na sdíleném počítači se odhlaste tlačítkem <span class="ui">Odhlásit</span> vpravo nahoře (po najetí myší ukáže, kdo je přihlášený).</li>
       <li>Přihlašovací kód nikomu nepřeposílejte.</li>
@@ -170,6 +170,7 @@
     <ul>
       <li><strong>Předmět:</strong> AI nabídne tři varianty, kliknutím jednu vyberete, nebo napíšete vlastní.</li>
       <li><strong>Úvodní obrázek:</strong> u produktu klikněte na <span class="ui">Fotky</span> a vyberte fotku jako úvodní obrázek nebo pro kartu produktu. Nejlépe fungují fotky ze zařízeného pokoje.</li>
+      <li><strong>Tučné písmo a kurzíva:</strong> nad úvodem, závěrem, bloky a popisky produktů jsou tlačítka <span class="ui">B</span> a <span class="ui"><i>I</i></span>. Označte text a klikněte, nebo zmáčkněte ⌘B / ⌘I (na Windows Ctrl+B / Ctrl+I). V textu se zvýraznění ukáže jako <code>**tučně**</code> a <code>*kurzíva*</code>, v e-mailu už jako skutečné tučné písmo a kurzíva. AI sama zvýrazní to nejdůležitější, třeba slevu, kód nebo hlavní radu.</li>
       <li><strong>Obsahové bloky (tipy):</strong> text, titulek a odkaz na článek z blogu nebo Průvodce nákupem.</li>
       <li><strong>Produkty:</strong> měnit popisky, pořadí, přidat nebo odebrat produkt.</li>
       <li><strong>Přegenerovat s poznámkou:</strong> napište, co změnit (například „kratší úvod, víc o bezpečnosti“), a AI e-mail přepíše.</li>
@@ -205,6 +206,7 @@
       <li>Píše za <strong>Terezu</strong>, v první osobě, vřele a konkrétně, podle příběhu ze stránky <a href="https://www.svet-pokoju.cz/o-nas/">O nás</a>. Pod e-mailem je podpis „S láskou, Tereza ze Světa Pokojů“ s fotkou.</li>
       <li>Produkty, ceny a dostupnost bere <strong>v tu chvíli přímo z e-shopu</strong>, ne z žádné staré kopie.</li>
       <li>Nevymýšlí slevy, kódy, termíny doručení, vlastnosti produktů ani historky o rodině.</li>
+      <li>To nejdůležitější (slevu, kód, termín, hlavní radu) zvýrazní tučně, jemný důraz kurzívou, vždy jen pár slov.</li>
       <li>Nepoužívá dlouhé pomlčky, znak „&amp;“ ani reklamní fráze typu „Objevte…“.</li>
       <li>Tipy staví na otázkách, které lidé opravdu hledají na Googlu, a odkazuje jen na existující články z blogu.</li>
     </ul>

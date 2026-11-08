@@ -229,3 +229,9 @@ label.check input { width: auto; margin: 3px 0 0; flex: none; }
 .hook-where { margin: 0 0 8px; color: var(--muted); }
 .hook-ex { border: 1px dashed var(--line); border-radius: 8px; padding: 10px; font-size: 13px; line-height: 1.5; color: #22303a; background: #fff; }
 .hook-ex p { margin: 6px 0 0; }
+
+/* bold / italic toolbar above editor texts */
+.fmt-bar { display: flex; align-items: center; gap: 4px; margin: 6px 0 4px; font-weight: normal; }
+.fmt { display: inline-grid; place-items: center; min-width: 30px; height: 28px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); font: 15px/1 Georgia, serif; cursor: pointer; user-select: none; }
+.fmt:hover, .fmt:focus-visible { border-color: var(--blue); color: var(--blue-dark); outline: none; }
+.fmt-hint { color: var(--muted); font-size: 12px; margin-left: 6px; }

@@ -583,7 +583,7 @@ function renderSectionsEdit() {
       (s, i) => `<div class="item" data-sec="${i}">
       <div class="item-head"><span class="name">Blok ${i + 1}</span><div class="tools"><button class="btn small" type="button" data-del-sec="${i}">Odebrat</button></div></div>
       <label>Nadpis<input data-sec-title="${i}" value="${escapeHtml(s.title)}"></label>
-      <label>Text<textarea rows="3" data-sec-text="${i}">${escapeHtml(s.text)}</textarea></label>
+      <label>Text<textarea rows="3" class="rich" data-sec-text="${i}">${escapeHtml(s.text)}</textarea></label>
       <div class="grid2">
         <label>Odkaz „čtěte víc“<select data-sec-link="${i}">${articleOptions(s.link_url)}</select></label>
         <label>Text odkazu<input data-sec-linktext="${i}" value="${escapeHtml(s.link_text || "")}" placeholder="Přečtěte si víc"></label>
@@ -628,7 +628,7 @@ function renderProductsEdit() {
           </div>
         </div>
         <div class="gallery hidden" data-gal="${escapeHtml(p.id)}"></div>
-        <label>Popisek<textarea rows="2" data-blurb="${i}">${escapeHtml(pc.blurb)}</textarea></label>
+        <label>Popisek<textarea rows="2" class="rich" data-blurb="${i}">${escapeHtml(pc.blurb)}</textarea></label>
         <label>Odznak<input data-badge="${i}" value="${escapeHtml(pc.badge)}" placeholder="např. Sleva 15 %"></label>
       </div>`;
     })
@@ -936,6 +936,61 @@ $("#hke-type").addEventListener("change", () => {
   collectEditor();
   renderHookEdit();
   schedulePreview();
+});
+
+/* ---------- bold / italic in editor texts ---------- */
+// **tučně** and *kurzíva* markers; the e-mail template turns them into <strong> / <em>.
+// The buttons are spans, not <button>s, so clicking the field label never triggers them.
+function wrapSelection(ta, mark) {
+  const { selectionStart: a, selectionEnd: b, value: v } = ta;
+  let sel = v.slice(a, b);
+  const lead = sel.match(/^\s*/)[0], trail = sel.match(/\s*$/)[0];
+  sel = sel.trim();
+  const before = v.slice(0, a) + lead, after = trail + v.slice(b);
+  // already wrapped → unwrap
+  if (sel && before.endsWith(mark) && after.startsWith(mark) && !(mark === "*" && before.endsWith("**") && !before.endsWith("***"))) {
+    ta.value = before.slice(0, -mark.length) + sel + after.slice(mark.length);
+    ta.setSelectionRange(before.length - mark.length, before.length - mark.length + sel.length);
+  } else {
+    const text = sel || (mark === "**" ? "tučný text" : "kurzíva");
+    ta.value = before + mark + text + mark + after;
+    ta.setSelectionRange(before.length + mark.length, before.length + mark.length + text.length);
+  }
+  ta.focus();
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function addFmtBars(root = document) {
+  root.querySelectorAll("textarea.rich").forEach((ta) => {
+    if (ta.previousElementSibling?.classList.contains("fmt-bar")) return;
+    const bar = document.createElement("span");
+    bar.className = "fmt-bar";
+    bar.innerHTML = '<span class="fmt" role="button" tabindex="0" data-fmt="**" title="Tučně (⌘B / Ctrl+B)"><b>B</b></span><span class="fmt" role="button" tabindex="0" data-fmt="*" title="Kurzíva (⌘I / Ctrl+I)"><i>I</i></span><span class="fmt-hint">označte text a klikněte</span>';
+    ta.before(bar);
+  });
+}
+addFmtBars();
+new MutationObserver(() => addFmtBars($("#editor"))).observe($("#editor"), { childList: true, subtree: true });
+
+document.addEventListener("mousedown", (e) => {
+  const btn = e.target.closest(".fmt-bar .fmt");
+  if (!btn) return;
+  e.preventDefault(); // keep the textarea selection
+  wrapSelection(btn.parentElement.nextElementSibling, btn.dataset.fmt);
+});
+document.addEventListener("keydown", (e) => {
+  const btn = e.target.closest?.(".fmt-bar .fmt");
+  if (btn && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    wrapSelection(btn.parentElement.nextElementSibling, btn.dataset.fmt);
+    return;
+  }
+  if (!e.target.matches?.("textarea.rich") || !(e.metaKey || e.ctrlKey) || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "b" || k === "i") {
+    e.preventDefault();
+    wrapSelection(e.target, k === "b" ? "**" : "*");
+  }
 });
 
 /* ---------- approve ---------- */

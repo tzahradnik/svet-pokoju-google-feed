@@ -3,6 +3,14 @@
     "date": "2026-11-08",
     "changes": [
       {
+        "type": "new",
+        "text": "Tučné písmo a kurzíva: v editoru jsou nad texty tlačítka B a I (nebo ⌘B / ⌘I). AI teď sama zvýrazní to nejdůležitější, třeba slevu, kód nebo hlavní radu."
+      },
+      {
+        "type": "improve",
+        "text": "Přihlašovací stránka má podrobnější české pokyny, co kam zadat a co dělat, když kód nepřijde."
+      },
+      {
         "type": "improve",
         "text": "Přihlašovací stránka je ve vizuální identitě Světa pokojů: logo, barva pozadí a české pokyny k přihlášení kódem."
       }

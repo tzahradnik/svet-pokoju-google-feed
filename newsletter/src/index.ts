@@ -1,7 +1,7 @@
 import { generateCopy, MODEL } from "./ai";
 import { accessEnabled, accessUser, checkPassword, clearCookie, isAuthenticated, sessionCookie } from "./auth";
 import { createDraft, listLists } from "./ecomail";
-import { renderEmail } from "./email";
+import { renderEmail, plain } from "./email";
 import planJson from "./plan.json";
 import { catalogFile, getSite, relatedArticles } from "./catalog";
 import { checkLinks, extractLinks } from "./links";
@@ -269,7 +269,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
     if (!d.listIds?.length) throw new HttpError(400, "Vyberte aspoň jeden seznam kontaktů.");
     const draft = await createDraft(env, {
       title: d.title?.trim() || d.state.campaign,
-      subject: d.state.subject.trim(),
+      subject: plain(d.state.subject).trim(),
       html: renderEmail(env, d.state),
       listIds: d.listIds,
       fromName: d.fromName?.trim() || env.FROM_NAME,
