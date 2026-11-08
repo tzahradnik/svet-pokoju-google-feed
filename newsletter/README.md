@@ -50,7 +50,7 @@ Non-secret defaults (sender name/e-mail, default list id) are in `wrangler.jsonc
 The sender e-mail must be on a domain verified in Ecomail.
 
 ## Login (Cloudflare Access)
-Account info@svet-pokoju.cz → Zero Trust (Free plan, team `royal-limit-1491`). Login method: One-time PIN only.
+Account info@svet-pokoju.cz → Zero Trust (Free plan, team `royal-limit-1491`). Login method: One-time PIN only. Login page branding: Zero Trust → Reusable components → Custom pages → Access login page (logo, Czech texts, background #f4f8fb).
 - App **Newslettery Světpokojů.cz** (Worker `nl`, all traffic incl. previews) with policy **Tým newsletterů** (Allow, list of e-mails).
 - App **Newslettery: veřejné stránky** with policy **Veřejné stránky** (Bypass, Everyone) for `/navod`, `/img/*`
   (Tereza's photo loads inside sent e-mails) and `/changelog.json`.

@@ -1,5 +1,14 @@
 [
   {
+    "date": "2026-11-08",
+    "changes": [
+      {
+        "type": "improve",
+        "text": "Přihlašovací stránka je ve vizuální identitě Světa pokojů: logo, barva pozadí a české pokyny k přihlášení kódem."
+      }
+    ]
+  },
+  {
     "date": "2026-11-07",
     "changes": [
       {
