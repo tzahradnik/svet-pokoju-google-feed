@@ -24,8 +24,11 @@
   a { color: #09608a; }
   code, .ui { background: #eef4f8; border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 14px; white-space: nowrap; }
   .ui { font-family: inherit; font-weight: 600; }
-  .note { background: var(--warn); border-left: 4px solid #f0a020; border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
-  .ok { background: #e9f8f1; border-left: 4px solid var(--teal); border-radius: 8px; padding: 12px 14px; margin: 12px 0; }
+  /* same look as the blocks in the e-mail: warm background + pastel "book spine" in the logo colours */
+  :root { --spine: linear-gradient(to bottom, #9fd9d3 0 25%, #f8e3a4 25% 50%, #fad3a0 50% 75%, #f2aaa5 75% 100%); --block-bg: #fbf8f3; }
+  .note, .ok, .block-ex { background: var(--spine) left top / 4px 100% no-repeat, var(--block-bg); border-radius: 10px; padding: 14px 18px 14px 22px; margin: 12px 0; }
+  .block-ex h4 { margin: 0 0 6px; font-size: 16px; }
+  .block-ex p { margin: 0; font-size: 15px; }
   ul, ol { padding-left: 22px; margin: 6px 0 10px; }
   li { margin: 4px 0; }
   table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0; }
@@ -172,7 +175,8 @@
       <li><strong>Předmět:</strong> AI nabídne tři varianty, kliknutím jednu vyberete, nebo napíšete vlastní.</li>
       <li><strong>Úvodní obrázek:</strong> u produktu klikněte na <span class="ui">Fotky</span> a vyberte fotku jako úvodní obrázek nebo pro kartu produktu. Nejlépe fungují fotky ze zařízeného pokoje.</li>
       <li><strong>Tučné písmo a kurzíva:</strong> nad úvodem, závěrem, bloky a popisky produktů jsou tlačítka <span class="ui">B</span> a <span class="ui"><i>I</i></span>. Označte text a klikněte, nebo zmáčkněte ⌘B / ⌘I (na Windows Ctrl+B / Ctrl+I). V textu se zvýraznění ukáže jako <code>**tučně**</code> a <code>*kurzíva*</code>, v e-mailu už jako skutečné tučné písmo a kurzíva. AI sama zvýrazní to nejdůležitější, třeba slevu, kód nebo hlavní radu.</li>
-      <li><strong>Obsahové bloky (tipy):</strong> text, titulek a odkaz na článek z blogu nebo Průvodce nákupem.</li>
+      <li><strong>Obsahové bloky (tipy):</strong> text, titulek a odkaz na článek z blogu nebo Průvodce nákupem. V e-mailu mají teplé světlé pozadí a vlevo proužek v barvách loga, stejně jako rámečky úvodních háčků:
+        <div class="block-ex"><h4>Co to jsou Montessori hračky?</h4><p>Jsou to <strong>jednoduché hračky, se kterými dítě objevuje a zkouší samo</strong>, bez blikání a hraní místo něj.</p></div></li>
       <li><strong>Produkty:</strong> měnit popisky, pořadí, přidat nebo odebrat produkt.</li>
       <li><strong>Přegenerovat s poznámkou:</strong> napište, co změnit (například „kratší úvod, víc o bezpečnosti“), a AI e-mail přepíše.</li>
     </ul>

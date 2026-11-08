@@ -3,6 +3,10 @@
     "date": "2026-11-08",
     "changes": [
       {
+        "type": "improve",
+        "text": "Návod používá stejný vzhled bloků jako e-mail (teplé pozadí a pastelový proužek z barev loga) a v kroku 2 ukazuje, jak blok v e-mailu vypadá."
+      },
+      {
         "type": "new",
         "text": "Přehled „Kdo má přístup“ v patičce: seznam e-mailů, které se smějí přihlásit, a kdy se kdo naposledy přihlásil. Načítá se přímo z nastavení přihlášení, takže je vždy aktuální."
       },
