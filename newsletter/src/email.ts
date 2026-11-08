@@ -43,7 +43,7 @@ const SPINE = ["#9fd9d3", "#f8e3a4", "#fad3a0", "#f2aaa5"];
 function spine(reverse: boolean): string {
   const c = reverse ? [...SPINE].reverse() : SPINE;
   const grad = `linear-gradient(to bottom,${c[0]} 0,${c[0]} 25%,${c[1]} 25%,${c[1]} 50%,${c[2]} 50%,${c[2]} 75%,${c[3]} 75%,${c[3]} 100%)`;
-  return `<td width="4" bgcolor="${c[0]}" style="width:4px;background:${c[0]};background-image:${grad};font-size:0;line-height:0">&nbsp;</td>`;
+  return `<td width="4" bgcolor="${c[0]}" style="width:4px;background:${c[0]};background-image:${grad};border-radius:10px 0 0 10px;font-size:0;line-height:0">&nbsp;</td>`;
 }
 
 /** Plain text → paragraphs; a block of lines starting with "- " becomes a bulleted list. */
@@ -108,7 +108,7 @@ function productCard(p: Product, blurb: string, badge: string, campaign: string)
     ? `<span style="display:inline-block;background:${p.discountPct ? C.red : C.teal};color:#fff;font-size:13px;font-weight:bold;padding:3px 8px;border-radius:4px;margin-bottom:8px">${esc(badge)}</span><br>`
     : "";
   return `<div class="col" style="display:inline-block;vertical-align:top;width:100%;max-width:262px;margin:0 5px 16px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border:1px solid ${C.line}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.card};border:1px solid ${C.line};border-radius:8px">
 <tr><td style="padding:12px 12px 0" align="center"><a class="img" href="${esc(href)}"><img src="${esc(p.image)}" width="238" alt="${esc(p.name)}" style="display:block;width:100%;max-width:238px;height:auto;border:0;border-radius:6px"></a></td></tr>
 <tr><td style="padding:12px 14px 16px;font-family:${FONT};text-align:left">
 ${badgeHtml}<a class="lnk" href="${esc(href)}" style="color:${C.text};text-decoration:none;font-size:15px;font-weight:bold;line-height:1.35">${esc(p.name)}</a>
@@ -169,7 +169,7 @@ function hookTop(h: Hook | undefined, text: string): string {
 function hookAboveHeadline(env: Env, h: Hook | undefined, text: string): string {
   // same look as the content blocks: warm background + pastel logo-colour spine
   const box = (inner: string, ..._legacy: string[]) =>
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate"><tr>${spine(false)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};padding:18px 22px;font-family:${FONT}">${inner}</td></tr></table>`;
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;border-collapse:separate"><tr>${spine(false)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};border-radius:0 10px 10px 0;padding:18px 22px;font-family:${FONT}">${inner}</td></tr></table>`;
   const label = (t: string) => `<div style="font-size:13px;font-weight:bold;color:${C.muted};margin:0 0 6px">${t}</div>`;
   switch (h?.type) {
     case "personal": {
@@ -236,7 +236,7 @@ export function renderEmail(env: Env, s: EmailState, opts: { preview?: boolean }
     .filter((x) => x.title || x.text)
     .map(
       (x, i) => `<tr><td style="padding:8px 32px 8px;font-family:${FONT}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr>${spine(i % 2 === 1)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};padding:18px 22px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr>${spine(i % 2 === 1)}<td bgcolor="${BLOCK_BG}" style="background:${BLOCK_BG};border-radius:0 10px 10px 0;padding:18px 22px">
 <h3 style="margin:0 0 8px;font-size:17px;color:${C.text}">${esc(plain(x.title))}</h3>${paragraphs(x.text, `font-size:15px;line-height:1.55;color:${C.text}`)}${
         x.link_url
           ? `<p style="margin:0"><a class="lnk" href="${esc(track(x.link_url, campaign, "clanek"))}" style="color:${C.link};font-size:15px;font-weight:bold">${esc(x.link_text || "Přečtěte si víc")} →</a></p>`

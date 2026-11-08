@@ -26,13 +26,7 @@
   .ui { font-family: inherit; font-weight: 600; }
   /* same look as the blocks in the e-mail: warm background + pastel "book spine" in the logo colours */
   :root { --spine: linear-gradient(to bottom, #9fd9d3 0 25%, #f8e3a4 25% 50%, #fad3a0 50% 75%, #f2aaa5 75% 100%); --block-bg: #fbf8f3; }
-  /* sharp corners like the brand identity; colour carries the meaning:
-     .bad = something is wrong (red), .note = warning (orange), .ok = tip / conversion (green), .block-ex = e-mail block */
-  .note, .ok, .bad, .block-ex { border-radius: 0; padding: 14px 18px 14px 22px; margin: 12px 0; }
-  .block-ex { background: var(--spine) left top / 4px 100% no-repeat, var(--block-bg); }
-  .bad { background: #fdeceb; border-left: 4px solid #e2453c; }
-  .note { background: #fff4e2; border-left: 4px solid #f6a623; }
-  .ok { background: #e6f5f2; border-left: 4px solid #12a89d; }
+  .note, .ok, .block-ex { background: var(--spine) left top / 4px 100% no-repeat, var(--block-bg); border-radius: 10px; padding: 14px 18px 14px 22px; margin: 12px 0; }
   .block-ex h4 { margin: 0 0 6px; font-size: 16px; }
   .block-ex p { margin: 0; font-size: 15px; }
   ul, ol { padding-left: 22px; margin: 6px 0 10px; }
