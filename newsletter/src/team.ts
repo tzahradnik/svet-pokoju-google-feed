@@ -11,7 +11,7 @@ export interface TeamInfo { configured: boolean; members: TeamMember[]; domains:
 const API = "https://api.cloudflare.com/client/v4";
 
 async function cf<T>(env: Env, path: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${env.CF_API_TOKEN}` } });
+  const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${(env.CF_API_TOKEN ?? "").trim()}` } });
   const data = (await res.json().catch(() => ({}))) as { success?: boolean; result?: T; errors?: { message: string }[] };
   if (!res.ok || !data.success) throw new Error(data.errors?.[0]?.message || `Cloudflare API ${res.status}`);
   return data.result as T;
@@ -39,6 +39,14 @@ export async function getTeam(env: Env): Promise<TeamInfo> {
       .sort((a, b) => a.email.localeCompare(b.email));
     return { configured: true, members, domains };
   } catch (e) {
-    return { configured: true, members: [], domains: [], error: (e as Error).message };
+    // tell an invalid/mis-pasted token apart from a missing permission
+    let why = (e as Error).message;
+    try {
+      const v = await cf<{ status: string }>(env, `/accounts/${acc}/tokens/verify`);
+      why += v.status === "active" ? " – klíč je platný, chybí mu oprávnění" : ` – klíč je ve stavu ${v.status}`;
+    } catch {
+      why += " – klíč je neplatný nebo špatně vložený";
+    }
+    return { configured: true, members: [], domains: [], error: why };
   }
 }
