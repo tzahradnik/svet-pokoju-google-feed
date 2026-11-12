@@ -16,6 +16,7 @@ import json
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
@@ -536,7 +537,16 @@ def main():
     ap.add_argument("--out", default="dist/google-ads-feed.xml")
     ap.add_argument("--no-scrape", dest="scrape", action="store_false")
     ARGS = ap.parse_args()
-    best, extra, other = read_source(ARGS.source)
+    # Shoptet občas vrátí 403/5xx (přetížení nebo ochrana proti botům) – zkusíme znovu, než build selže
+    for attempt, wait in enumerate((60, 180, 300, None), 1):
+        try:
+            best, extra, other = read_source(ARGS.source)
+            break
+        except (urllib.error.URLError, OSError, ET.ParseError) as e:
+            log(f"!! čtení feedu selhalo (pokus {attempt}): {e}")
+            if wait is None:
+                raise
+            time.sleep(wait)
     items = select(best, extra, other)
     xml, n = render(items)
     if n < MIN_ITEMS_OK:
