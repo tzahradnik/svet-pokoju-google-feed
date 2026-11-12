@@ -79,4 +79,4 @@ Every change that alters what users see or do **must** also update `public/navod
 
 ## Hlas značky
 
-Příběh, tón hlasu a povinná pravidla psaní (bez dlouhých pomlček a znaku „&“) jsou v `src/hlas-znacky.md`. AI ho čte při každém generování. Po úpravě souboru stačí aplikaci znovu nasadit (`npx wrangler deploy`).
+Příběh, tón hlasu (podle Tone of Voice manuálu Světa pokojů) a povinná pravidla psaní (bez dlouhých pomlček a znaku „&“) jsou v `src/hlas-znacky.md`. Zápis značek PINKIE a Amálka navíc hlídá `cleanText` v `src/ai.ts`. AI ho čte při každém generování. Po úpravě souboru stačí aplikaci znovu nasadit (`npx wrangler deploy`).

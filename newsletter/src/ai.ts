@@ -32,6 +32,8 @@ export function cleanText(t: string): string {
     .replace(/\s+–\s+/g, ", ")
     .replace(/–/g, "-")
     .replace(/\s*&\s*/g, " a ")
+    .replace(/(?<![\p{L}/])pinkie(?![\p{L}/]|\.\p{L})/giu, "PINKIE") // brand spelling (tone-of-voice)
+    .replace(/(?<![\p{L}/])amalk(?=[ayuoěeáiu]?(?![\p{L}/]))/giu, "Amálk")
     .replace(/,\s*([,.!?:])/g, "$1")
     .replace(/ {2,}/g, " ");
 }
