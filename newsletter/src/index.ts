@@ -230,7 +230,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   }
   if (path === "/api/check-links" && req.method === "POST") {
     const state = await body<EmailState>(req);
-    const results = await checkLinks(env, extractLinks(renderEmail(env, state)));
+    const results = await checkLinks(env, extractLinks(renderEmail(env, state)), url.hostname);
     return json({ results, broken: results.filter((r) => !r.ok).length });
   }
   if (path === "/api/products") {

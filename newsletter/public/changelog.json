@@ -1,5 +1,14 @@
 [
   {
+    "date": "2026-11-25",
+    "changes": [
+      {
+        "type": "fix",
+        "text": "Kontrola odkazů už nehlásí fotku Terezy v podpisu jako nefunkční. Fotka v e-mailu fungovala, chyba byla jen v samotné kontrole."
+      }
+    ]
+  },
+  {
     "date": "2026-11-12",
     "changes": [
       {

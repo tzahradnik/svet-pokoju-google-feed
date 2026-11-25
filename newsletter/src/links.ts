@@ -26,12 +26,16 @@ export function extractLinks(html: string): string[] {
 }
 
 /** Checks that each link works. Shoptet redirects removed products to a category – reported as a problem. */
-export async function checkLinks(env: Env, urls: string[]): Promise<LinkResult[]> {
+export async function checkLinks(env: Env, urls: string[], appHost = ""): Promise<LinkResult[]> {
   const shopHost = new URL(env.SHOP_URL).hostname;
+  // A Worker cannot fetch its own workers.dev address (always 404), so files of this app are checked in its static assets.
+  const own = (u: string) => new URL(u).hostname === appHost;
   return Promise.all(
     urls.slice(0, MAX_LINKS).map(async (url): Promise<LinkResult> => {
       try {
-        const res = await fetch(url, { method: "GET", redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 (compatible; svet-pokoju-newsletter)" } });
+        const res = own(url)
+          ? await env.ASSETS.fetch(new Request(url))
+          : await fetch(url, { method: "GET", redirect: "manual", headers: { "User-Agent": "Mozilla/5.0 (compatible; svet-pokoju-newsletter)" } });
         res.body?.cancel();
         const loc = res.headers.get("Location");
         if (res.status >= 300 && res.status < 400 && loc) {
